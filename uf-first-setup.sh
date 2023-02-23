@@ -1,4 +1,4 @@
-# Updated by February 22nd, 2023
+# Updated by February 23rd, 2023
 #
 # Written by Mikhail Patricio Ortiz-Lunyov
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
@@ -36,8 +36,10 @@ CustomChown() {
     # Starts loop
     Q_LOOP1=true
     while [ "$Q_LOOP1" = true ] ; do
-        read -p "File owner name: " OWNERNAME
-        read -p "File group name: " GROUPNAME
+        printf "File owner name: "
+        read OWNERNAME
+        printf "File group name: "
+        read GROUPNAME
         chown $OWNERNAME:$GROUPNAME $SCRIPTNAME
         if [ "$?" != "0" ] ; then
             clear
@@ -53,9 +55,12 @@ CustomChmod() {
     # Starts loop
     Q_LOOP2=true
     while [ "$Q_LOOP2" = true ] ; do
-        read -p "Owner rights code: " OWNERRIGHTS
-        read -p "Group rights code: " GROUPRIGHTS
-        read -p "Others rights code: " OTHERSRIGHTS
+        printf "Owner rights code: "
+        read OWNERRIGHTS
+        printf "Group rights code: "
+        read GROUPRIGHTS
+        printf "Others rights code: "
+        read OTHERSRIGHTS
         chmod $OWNERRIGHTS$GROUPRIGHTS$OTHERSRIGHTS $SCRIPTNAME
         if [ "$?" != "0" ] ; then
             clear
@@ -76,7 +81,8 @@ DEFAULT_Q_LOOP=true
 while [ "$DEFAULT_Q_LOOP" = true ] ; do
     echo "Do you want to use defaults ($SCRIPTNAME is owned by root, $SCRIPTNAME can only be read, writen, and executed by user (root), and read by everyone else)?"
     echo "!!!RECOMMENDED!!!"
-    read -p "[Y]es/[N]o < " DEFAULT_Q
+    printf "[Y]es/[N]o < "
+    read DEFAULT_Q
     if [ "$DEFAULT_Q" = "Y" -o "$DEFAULT_Q" = "y" -o "$DEFAULT_Q" = "Yes" -o "$DEFAULT_Q" = "yes" ] ; then
         DefaultSettings
         DEFAULT_Q_LOOP=false
@@ -84,8 +90,8 @@ while [ "$DEFAULT_Q_LOOP" = true ] ; do
         Q_LOOP0=true
         while [ "$Q_LOOP0" = true ] ; do
             echo "What do you want to change?"
-            printf "\t[1] chown (change file owner and group)\n\t[2] chmod (change file mode bits)\n\t[3] Both\n\t[4] Use defaults instead\n"
-            read -p " < " Q_0
+            printf "\t[1] chown (change file owner and group)\n\t[2] chmod (change file mode bits)\n\t[3] Both\n\t[4] Use defaults instead\n < "
+            read Q_0
             if [ "$Q_0" = "1" ] ; then
                 CustomChown
                 Q_LOOP0=false
