@@ -70,7 +70,7 @@ CustomChmod() {
 clear
 # Runs Root check function
 RootCheck
-SCRIPTNAME="update_full-bash.sh"
+SCRIPTNAME="update_full-unix.sh"
 # Start default check loop
 DEFAULT_Q_LOOP=true
 while [ "$DEFAULT_Q_LOOP" = true ] ; do
