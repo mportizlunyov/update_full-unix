@@ -1,7 +1,9 @@
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of popular UNIX distributions through their respective package managers.
 This simple script can be used for standard home users, power users with home labs, and even enterprise servers if desired.
 
-These scripts are designed especially for Linux, but are also compatible with BSD and Mac OS (due to them being UNIX-based).
+These scripts are designed especially for Linux, but are also compatible with BSD and Mac OS, due to them being UNIX-based.
+(In regards to MacOS, it is reccomended to use the ZSH version of this script.
+ As of 2023, the BASH version that MacOS ships with is outdated and insecure. )
 This script is compatible and tested with:
  - BASH (Bourne-Again SHell)
  - SH   (SHell)
