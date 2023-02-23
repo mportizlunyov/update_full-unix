@@ -1,4 +1,4 @@
-# Updated: February 22nd 2023
+# Updated: February 23rd 2023
 #
 # Written by Mikhail Patricio Ortiz-Lunyov
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
@@ -355,13 +355,15 @@ ManualApt () {
     MANQ=" "
     while [ "$MANQ_DEB1" = true ] ; do
         printf "Are you updating a \e[3mDebian/Ubuntu-based system\e[0m?\n"
-        read -p "[Y/y]es/[N/n]o < " MANQ_R1
+        printf "[Y/y]es/[N/n]o < "
+        read MANQ_R1
         if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
             MANQ_DEB1=false
         elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
             while [ "$MANQ_DEB2" = true ] ; do
                 printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
-                read -p " < " MANQ_R2
+                printf " < "
+                read MANQ_R2
                 if [ "$MANQ_R2" = "1" ] ; then
                     APT_UPGRADE="dist-upgrade"
                     MANQ_DEB1=false
@@ -385,13 +387,15 @@ ManualApt () {
     done
     while [ "$MANQ_SUSE1" = true ] ; do
         printf "Are you updating an \e[3mOpenSUSE\e[0m system?\n"
-        read -p "[Y/y]es/[N/n]o < " MANQ_R1
+        printf "[Y/y]es/[N/n]o < "
+        read MANQ_R1
         if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
             MANQ_SUSE1=false
         elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
             while [ "$MANQ_SUSE2" = true ] ; do
                 printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
-                read -p " < " MANQ_R2
+                printf " < "
+                read MANQ_R2
                 if [ "$MANQ_R2" = "1" ] ; then
                     SUSE_UPGRADE="dist-upgrade"
                     MANQ_SUSE1=false
@@ -421,7 +425,8 @@ Settings () {
         #PING_TARGET="$1"
         if [ "$INPUTDOMAIN" = "true" ] ; then
             # Takes input from user for custom domain to use ping test on
-            read -p 'Type domain: < ' PING_TARGET
+            printf "Type domain: < "
+            read PING_TARGET
         fi
     fi
     # Default option (do ping test)
@@ -827,7 +832,8 @@ SaveStatsComments () {
             tempfileISSUEFLAG=true
             break
         }
-        read -p  "TYPE: " COMMENTINPUT
+        printf "TYPE: "
+        read COMMENTINPUT
     done
     printf "= = =\n\e[0m"
     if [ "tempfileISSUEFLAG" = true ] ; then
