@@ -75,9 +75,9 @@ Descriptive arguments are incompatible with any functional argument and doing so
 
 I hope you enjoy using this program!
 
-Copyright (C) 2022  Mikhail Patricio Ortiz-Lunyov
-    Update_Full-BASH is a script that allows for automatic updating of many
-    different UNIX (Linux, BSD, etc) distros across many different Shells.
+Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
+    Update_Full-UNIX is a script that allows for automatic updating of many
+    different UNIX (Linux, BSD, etc) distros across many different Shells (except zsh).
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
