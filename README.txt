@@ -2,16 +2,12 @@ Update_Full is a suite of Free & Open-Source scripts written in several shell sc
 This simple script can be used for standard home users, power users with home labs, and even enterprise servers if desired.
 
 These scripts are designed especially for Linux, but are also compatible with BSD and Mac OS, due to them being UNIX-based.
-(In regards to MacOS, it is reccomended to use the ZSH version of this script.
- As of 2023, the BASH version that MacOS ships with is outdated and insecure. )
 This script is compatible and tested with:
  - BASH (Bourne-Again SHell)
  - SH   (SHell)
  - KSH  (Korne SHell)
  - ASH  (Almquist SHell)
-
- This script is not compatible with Z SHell!
- Use update_full-zsh instead: <https://github.com/mportizlunyov/update_full-zsh>
+ - ZSH (Z SHell)
 
 
 The script supports the following package managers (Full list below):
