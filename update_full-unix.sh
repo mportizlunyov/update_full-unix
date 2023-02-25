@@ -1,9 +1,9 @@
-# Updated: February 23rd 2023
-#
 # Written by Mikhail Patricio Ortiz-Lunyov
+#
+# Updated: February 24th 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
-# Compatible and tested with BASH, SH, KSH, ASH.
-# For ZSH, use update_full-bash-zsh <https://github.com/mportizlunyov/update_full-zsh>
+# Compatible and tested with BASH, SH, KSH, ASH, and ZSH.
+# Not compatible with CSH, TCSH, or Powershell (Development in progress).
 # More information about license in readme and bottom.
 # Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
 # Checking the hashes from the github can help to check for tampering.
