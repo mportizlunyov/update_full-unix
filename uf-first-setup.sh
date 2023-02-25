@@ -1,6 +1,6 @@
-# Updated by February 23rd, 2023
-#
 # Written by Mikhail Patricio Ortiz-Lunyov
+#
+# Updated by February 24th, 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # More information about license in readme and bottom.
 
