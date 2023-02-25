@@ -1,5 +1,5 @@
 # Security Policy
-If an end-user discovers a vulnerability in the update_full-bash script, it can be reported to:
+If an end-user discovers a vulnerability in the update_full-unix script, it can be reported to:
 < tangier_commiters@simplelogin.com >
 
 When disclosing a security vulnerability, please write everything into the text of the email.
