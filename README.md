@@ -61,7 +61,7 @@ By default, the script attempts to update both the official distrobution packag 
 By default, the script does not save any statistics on errors or general usage.
     To save statistics into a log file (and even make comments for context!), add the --save-statistics or -ss argument.
 
-    Descriptive arguments:
+   Descriptive arguments:
     To print the help statement, add the --help or -h argument.
     To print the conditions of redistribution, add the --conditions or -c argument.
     To print the warranty of the program, add the --warranty or -w argument.
@@ -77,7 +77,7 @@ Descriptive arguments are incompatible with any functional argument and doing so
 
 I hope you enjoy using this program!
 
-Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
+    Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
     Update_Full-UNIX is a script that allows for automatic updating of many
     different UNIX (Linux, BSD, etc) distros across many different shells (see details).
     This program is free software: you can redistribute it and/or modify
