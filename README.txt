@@ -7,7 +7,11 @@ This script is compatible and tested with:
  - SH   (SHell)
  - KSH  (Korne SHell)
  - ASH  (Almquist SHell)
- - ZSH (Z SHell)
+ - ZSH  (Z SHell)
+The following are not yet supported:
+ - CSH  (C SHell)
+ - TCSH (Tenex Command SHell)
+ - PWSH (PowerSHell)
 
 
 The script supports the following package managers (Full list below):
