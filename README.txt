@@ -8,10 +8,12 @@ This script is compatible and tested with:
  - KSH  (Korne SHell)
  - ASH  (Almquist SHell)
  - ZSH  (Z SHell)
-The following are not yet supported:
+The following are not supported:
  - CSH  (C SHell)
  - TCSH (Tenex Command SHell)
+ - FISH (FIsh SHell)
  - PWSH (PowerSHell)
+ - Less mainstream shells
 
 
 The script supports the following package managers (Full list below):
