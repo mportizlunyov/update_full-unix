@@ -337,9 +337,11 @@ CheckPkgAuto () {
         elif [ "$NOPKG" = "7" ] ; then
             printf "\t\e[1mNO KNOWN ALTERNATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
             CHECK_PKG=false     
+        : '
         else
             printf "\t\e[1mSOMETHING ELSE IS DETECTED!\e[0m\n\n]"
             CHECK_PKG=false
+            '
         fi
     done
 }
