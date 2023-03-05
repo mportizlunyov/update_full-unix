@@ -1,12 +1,18 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Updated: February 24th 2023
+# Updated: March 4th 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
 # More information about license in readme and bottom.
 # Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
 # Checking the hashes from the github can help to check for tampering.
+
+# Prints Exit Statement
+ExitStatement () {
+    printf "\tI hope this program was useful for you!\n\n"
+    printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+}
 
 # Tests network connectivity using PING
 NetworkTest () {
@@ -26,13 +32,6 @@ NetworkTest () {
     # Otherwise, continue as usual
         # Bold Font (\e[1m), Black background (\e[40m), Green + (\e[32m)
     printf "\e[1;1m\e[1;40m--\e[1;32m+\e[1;0m\e[1;40m-->\e[1;0m Connection to $PING_TARGET successful, beginning update:\n=-=-=-=-=\n"
-}
-
-# Decides based on the arguments whether to perform a ping on a domain or not.
-DecideTest () {
-    if [ "$TEST_CONNECTION" = true ] ; then
-        NetworkTest
-    fi
 }
 
 # For Debian/Ubuntu-based operating systems
@@ -101,7 +100,7 @@ ApkUpdate () {
 PacmanUpdate () {
     PACMANFLAG=true
     printf "\t\e[1mARCH LINUX detected\e[0m\n\n"
-    $ROOTUSE apk pacman -Syu $MANQ
+    $ROOTUSE pacman -Syu $MANQ
 }
 
 # For OpenSUSE Linux
@@ -193,8 +192,6 @@ YarnUpdate () {
 
 # Selects the correct package manager to modify packages
 CheckPkgAuto () {
-    # Decides whether to do the Ping Test
-    DecideTest
     NOPKG=0
     while [ "$CHECK_PKG" = true ] ; do
         # If disabling alternative package managers is not disabled.
@@ -339,132 +336,9 @@ CheckPkgAuto () {
             CHECK_PKG=false
         elif [ "$NOPKG" = "7" ] ; then
             printf "\t\e[1mNO KNOWN ALTERNATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
-            CHECK_PKG=false     
+            CHECK_PKG=false
         fi
     done
-}
-
-# Sets up the manual
-ManualApt () {
-    # Defines loops for program
-    MANQ_DEB1=true
-    MANQ_DEB2=true
-    MANQ_SUSE1=true
-    MANQ_SUSE2=true
-    # Makes all package manager questions manual
-    MANQ=" "
-    while [ "$MANQ_DEB1" = true ] ; do
-        printf "Are you updating a \e[3mDebian/Ubuntu-based system\e[0m?\n"
-        printf "[Y/y]es/[N/n]o < "
-        read MANQ_R1
-        if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
-            MANQ_DEB1=false
-        elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
-            while [ "$MANQ_DEB2" = true ] ; do
-                printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
-                printf " < "
-                read MANQ_R2
-                if [ "$MANQ_R2" = "1" ] ; then
-                    APT_UPGRADE="dist-upgrade"
-                    MANQ_DEB1=false
-                    MANQ_DEB2=false
-                    # Below two lines added to prevent SUSE loop from starting
-                    MANQ_SUSE1=false
-                    MANQ_DEB2=false
-                elif [ "$MANQ_R2" = "2" ] ; then
-                    APT_UPGRADE="upgrade"
-                    MANQ_DEB1=false
-                    MANQ_DEB2=false
-                    MANQ_SUSE1=false
-                    MANQ_DEB2=false
-                else
-                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-                fi
-            done
-        else
-            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-        fi
-    done
-    while [ "$MANQ_SUSE1" = true ] ; do
-        printf "Are you updating an \e[3mOpenSUSE\e[0m system?\n"
-        printf "[Y/y]es/[N/n]o < "
-        read MANQ_R1
-        if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
-            MANQ_SUSE1=false
-        elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
-            while [ "$MANQ_SUSE2" = true ] ; do
-                printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
-                printf " < "
-                read MANQ_R2
-                if [ "$MANQ_R2" = "1" ] ; then
-                    SUSE_UPGRADE="dist-upgrade"
-                    MANQ_SUSE1=false
-                    MANQ_SUSE2=false
-                elif [ "$MANQ_R2" = "2" ] ; then
-                    SUSE_UPGRADE="update"
-                    MANQ_SUSE1=false
-                    MANQ_SUSE2=false
-                else
-                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-                fi
-            done
-        else
-            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-        fi
-    done
-    printf "\tContinuing...\n"
-}
-
-# Sets up the default settings, as well as modifiers
-Settings () {
-    # Default option (cloudflare.com domain)
-    if [ "$1" = "" -o "$1" = "0" ] ; then
-        PING_TARGET="cloudflare.com"
-    # Custom domain
-    elif [ "$1" = "custom-domain" ] ; then
-        #PING_TARGET="$1"
-        if [ "$INPUTDOMAIN" = "true" ] ; then
-            # Takes input from user for custom domain to use ping test on
-            printf "Type domain: < "
-            read PING_TARGET
-        fi
-    fi
-    # Default option (do ping test)
-    if [ "$2" = "" -o "$2" = "0" ] ; then
-        TEST_CONNECTION=true
-    # Do not do ping test
-    elif [ "$2" = "no-test" ] ; then
-        TEST_CONNECTION=false
-    fi
-    # Default option (dist-upgrade on apt, default -y option)
-    if [ "$3" = "" -o "$3" = "0" ] ; then
-        MANQ="-y"
-        APT_UPGRADE="dist-upgrade"
-    # Al questions manual, further configuration
-    elif [ "$3" = "manual" ] ; then
-        ManualApt
-    fi
-    # Default option (check for updates on alternative package managers if they exist)
-    if [ "$4" = "" -o "$4" = "0" ] ; then
-        DISABLEALT=false
-    # Only use the distro's official package manager
-    elif [ "$4" = "disable-alt" ] ; then
-        DISABLEALT=true
-    fi
-    # Use newer dnf instead of older yum
-    if [ "$5" = "" -o "$5" = "0" ] ; then
-        YUM_UPDATE=false
-    # Use older yum instead of newer dnf
-    elif [ "$5" = "yum-update" ] ; then
-        YUM_UPDATE=true
-    fi
-    # Use official package manager
-    if [ "$6" = "" -o "$6" = "0" ] ; then
-        ALTONLY=false
-    # Only use alternative package manager
-    elif [ "$6" = "alt-only" ] ; then
-        ALTONLY=true
-    fi
 }
 
  # Prints a Help message
@@ -533,6 +407,7 @@ WarrantyMessage () {
     echo 'COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.'
 }
 
+# Prints the privacy policy
 PrivacyPolicyMessage () {
     echo ' = = ='
     echo 'THIS PROGRAM DOES NOT COLLECT ANY TELEMETRY OR USER DATA.'
@@ -546,279 +421,6 @@ PrivacyPolicyMessage () {
     echo 'CONTROLS THEY PROVIDE TO THEIR USERS.'
     echo 'ALL OF THESE STATEMENTS CAN BE VERIFIED, AS THIS SOFTWARE IS FREE & OPEN-SOURCE,'
     echo 'THUS MEANING THAT ANYBODY CAN READ THE SOURCE CODE AND VERIFY WHAT IT DOES.'
-}
-
-# Decides what to do depending on the score:
-#  default = 0 [+1]
-#   Functional (POINTVAR):
-#      -cd = 1  [*2]
-#      -nt = 2  [*2]
-#      -ma = 4  [*2]
-#     -dam = 8  [*2]
-#      -yu = 16 [*2]
-#      -ao = 32
-PointDecideFunc () {
-    # Using single arguments only
-    #############################
-    # Default settings
-    DESC_CD=" using custom domain"
-    DESC_NT=" skipping ping testing"
-    DESC_MA=" using manual setting"
-    DESC_DAM=" skipping alternative package managers"
-    DESC_YU=" using YUM over DNF"
-    DESC_AO=" using only alternative package mangers"
-    # Default
-    if [ "$POINTVAR" = "0" ] ; then
-        Settings
-        DESC=" using default settings"
-    # Only Custom Directory
-    elif [ "$POINTVAR" = "1" ] ; then
-        Settings custom-domain
-        DESC="$DESC_CD"
-    # Only skip ping tests
-    elif [ "$POINTVAR" = "2" ] ; then
-        Settings 0 no-test
-        DESC="$DESC_NT"
-    # Only use manual descisions
-    elif [ "$POINTVAR" = "4" ] ; then
-        Settings 0 0 manual
-        DESC="$DESC_MA"
-    # Only disable alternative package manangers
-    elif [ "$POINTVAR" = "8" ] ; then
-        Settings 0 0 0 disable-alt
-        DESC="$DESC_DAM"
-    # Only enables yum instead of dnf
-    elif [ "$POINTVAR" = "16" ] ; then
-        Settings 0 0 0 0 yum-update
-        DESC="$DESC_YU"
-    elif [ "$POINTVAR" = "32" ] ; then
-        Settings 0 0 0 0 0 alt-only
-        DESC="$DESC_AO"
-    # Using combined compatible arguments
-    #####################################
-    elif [ "$POINTVAR" = "5" ] ; then
-        Settings custom-domain 0 manual
-        DESC="$DESC_CD ($PING_TARGET) and$DESC_MA"
-    elif [ "$POINTVAR" = "6" ] ; then
-        Settings 0 no-test manual
-        DESC="$DESC_NT and$DESC_MA"
-    elif [ "$POINTVAR" = "9" ] ; then
-        Settings custom-domain 0 0 disable-alt
-        DESC="$DESC_DAM and$DESC_CD ($PING_TARGET)"
-    elif [ "$POINTVAR" = "10" ] ; then
-        Settings 0 no-test 0 disable-alt
-        DESC="$DESC_DAM and$DESC_NT"
-    elif [ "$POINTVAR" = "12" ] ; then
-        Settings 0 0 manual disable-alt
-        DESC="$DESC_DAM and$DESC_MA"
-    elif [ "$POINTVAR" = "13" ] ; then
-        Settings custom-domain 0 manual disable-alt
-        DESC="$DESC_DAM,$DESC_CD ($PING_TARGET) and$DESC_MA"
-    elif [ "$POINTVAR" = "14" ] ; then
-        Settings 0 no-test manual disable-alt
-        DESC="$DESC_DAM,$DESC_NT and$DESC_MA"
-    elif [ "$POINTVAR" = "17" ] ; then
-        Settings custom-domain 0 0 0 yum-update
-        DESC="$DESC_YU and$DESC_CD ($PING_TARGET)"
-    elif [ "$POINTVAR" = "18" ] ; then
-        Settings 0 no-test 0 0 yum-update
-        DESC="$DESC_YU and$DESC_NT"
-    elif [ "$POINTVAR" = "20" ] ; then
-        Settings 0 0 manual 0 yum-update
-        DESC="$DESC_YU and$DESC_MA"
-    elif [ "$POINTVAR" = "21" ] ; then
-        Settings custom-domain 0 manual 0 yum-update
-        DESC="$DESC_YU,$DESC_MA and$DESC_CD ($PING_TARGET)"
-    elif [ "$POINTVAR" = "22" ] ; then
-        Settings 0 no-test manual 0 yum-update
-        DESC="$DESC_YU,$DESC_MA and$DAM_NT"
-    elif [ "$POINTVAR" = "24" ] ; then
-        Settings 0 0 0 disable-alt yum-update
-        DESC="$DESC_YU and$DESC_DAM"
-    elif [ "$POINTVAR" = "25" ] ; then
-        Settings custom-domain 0 0 disable_alt yum-update
-        DESC="$DESC_YU,$DESC_DAM and$DESC_CD ($PING_TARGET)"
-    elif [ "$POINTVAR" = "26" ] ; then
-        Settings 0 no-test 0 disable-alt yum-update
-        DESC="$DESC_YU,$DESC_DAM and$DESC_NT"
-    elif [ "$POINTVAR" = "28" ] ; then
-        Settings 0 0 manual disable-alt yum-update
-        DESC="$DESC_YU,$DESC_DAM and$DESC_MA"
-    elif [ "$POINTVAR" = "29" ] ; then
-        Settings custom-domain 0 manual disable-alt yum-update
-        DESC="$DESC_YU,$DESC_DAM,$DESC_MA and$DESC_CD ($PING_TARGET)"
-    elif [ "$POINTVAR" = "30" ] ; then
-        Settings 0 0 manual disable-alt yum-update
-        DESC="$DESC_YU,$DESC_DAM,$DESC_MA and$DESC_NT"
-    elif [ "$POINTVAR" = "33" ] ; then
-        Settings custom-domain 0 0 0 0 alt-only
-        DESC= "$DESC_AO and$DESC_CD ($PING_TARGET)"
-    elif [ "$POINTVAR" = "34" ] ; then
-        Settings 0 no-test 0 0 0 alt-only
-        DESC="$DESC_NT and$DESC_AO"
-    elif [ "$POINTVAR" = "36" ] ; then
-        Settings 0 0 manual 0 0 alt-only
-        DESC="$DESC_MA and$DESC_AO"
-    elif [ "$POINTVAR" = "37" ] ; then
-        Settings custom-domain 0 manual 0 0 alt-only
-        DESC="$DESC_CD ($PING_TARGET),$DESC_MA and$DESC_AO"
-    elif [ "$POINTVAR" = "38" ] ; then
-        Settings 0 no-test manual 0 0 alt-only
-        DESC="$DESC_NT,$DESC_MA and$DESC_AO"
-    elif [ "$POINTVAR" = "48" ] ; then
-        Settings 0 0 0 0 yum-update alt-only
-        DESC="$DESC_YU and$DESC_AO"
-    elif [ "$POINTVAR" = "49" ] ; then
-        Settings custom-domain 0 0 0 yum-update alt-only
-        DESC="$DESC_CD ($PING_TARGET),$DESC_YU and$DESC_AO"
-    elif [ "$POINTVAR" = "50" ] ; then
-        Settings 0 no-test 0 0 yum-update alt-only
-        DESC="$DESC_NT,$DESC_YU and$DESC_AO"
-    elif [ "$POINTVAR" = "52" ] ; then
-        Settings 0 0 manual 0 yum-update alt-only
-        DESC="$DESC_MA,$DESC_YU and$DESC_AO"
-    elif [ "$POINTVAR" = "53" ] ; then
-        Settings custom-domain 0 manual 0 yum-update alt-only
-        DESC="$DESC_CD ($PING_TARGET),$DESC_MA,$DESC_YU and$DESC_AO"
-    elif [ "$POINTVAR" = "54" ] ; then
-        Settings 0 no-test manual 0 yum-update alt-only
-        DESC="$DESC_NT,$DESC_MA,$DESC_YU and$DESC_AO"
-    # Error Statement for mixed -nt/--no-test and -cd/--custom-domain
-    ##################
-    elif [ "$POINTVAR" = "3" -o "$POINTVAR" = "7" -o "$POINTVAR" = "11" -o "$POINTVAR" = "15" -o "$POINTVAR" = "19" -o "$POINTVAR" = "23" -o "$POINTVAR" = "27" -o "$POINTVAR" = "31" -o "$POINTVAR" = "35" -o "$POINTVAR" = "39" -o "$POINTVAR" = "51" -o "$POINTVAR" = "55" ] ; then
-        #echo "POINTVAR = $POINTVAR"
-        echo "Invalid argument combination (likely -nt/--no-test and -cd/--custom-domain). Relaunch script with valid combination."
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATINCOMPARGS=true
-            INCOMPARGS_DETAIL="Likely -cd / --custom-domain and -nt / --no-test mixed."
-            SaveStats
-        else
-            exit 1
-        fi
-    # Error Statement for mixed -ao/--alt-only
-    #################
-    elif [ "$POINTVAR" = "40" -o "$POINTVAR" = "41" -o "$POINTVAR" = "42" -o "$POINTVAR" = "44" -o "$POINTVAR" = "45" -o "$POINTVAR" = "46" -o "$POINTVAR" = "47" -o "$POINTVAR" = "56" -o "$POINTVAR" = "57" -o "$POINTVAR" = "58" -o "$POINTVAR" = "60" -o "$POINTVAR" = "61" -o "$POINTVAR" = "62" ] ; then
-        #echo "POINTVAR = $POINTVAR"
-        echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATINCOMPARGS=true
-            INCOMPARGS_DETAIL="Likely -dam / --disable-alt-managers and -ao / --alt-only mixed."
-            SaveStats
-        else
-            exit 1
-        fi
-    #Error Statement for hybrid mixed errors
-    ################
-    elif [ "$POINTVAR" = "43" -o "$POINTVAR" = "59" ] ; then
-        #echo "POINTVAR = $POINTVAR"
-        echo "Multiple invalid argument combinations (likely -ao/--alt-only and -dam/--disable-alt-managers and -cd/--custom-domain and -nt/--no-test). Relaunch script with valid combination."
-        echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATINCOMPARGS=true
-            INCOMPARGS_DETAIL="Likely an invalid combination of multiple incompatible arguments [See README for incompatible arguments]"
-            SaveStats
-        else
-            exit 1
-        fi
-    # Error Statement for all possible functional arguments
-    ################
-    elif [ "$POINTVAR" = "63" ] ; then
-        echo "All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
-        echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATINCOMPARGS=true
-            INCOMPARGS_DETAIL="Likely all possible arguments attempted."
-            SaveStats
-        else
-            exit 1
-        fi
-    fi
-}
-
-#  Descriptive (DESCPOINT):
-#       -h = 1 [*2]
-#       -c = 2 [*2]
-#       -w = 4 [*2]
-#      -pp = 8
-PointDecideDesc () {
-    if [ "$DESCPOINT" = "1" ] ; then
-        echo 'Descriptive Variables detected:'
-        HelpMessage
-        exit 0
-    elif [ "$DESCPOINT" = "2" ] ; then
-        echo 'Descriptive Variables detected:'
-        ConditionMessage
-        exit 0
-    elif [ "$DESCPOINT" = "3" ] ; then
-        echo 'Descriptive Variables detected:'
-        HelpMessage
-        ConditionMessage
-        exit 0
-    elif [ "$DESCPOINT" = "4" ] ; then
-        echo 'Descriptive Variables detected:'
-        WarrantyMessage
-        exit 0
-    elif [ "$DESCPOINT" = "5" ] ; then
-        echo 'Descriptive Variables detected:'
-        HelpMessage
-        WarrantyMessage
-        exit
-    elif [ "$DESCPOINT" = "6" ] ; then
-        echo 'Descriptive Variables detected:'
-        WarrantyMessage
-        ConditionsMessage
-        exit 0
-    elif [ "$DESCPOINT" = "7" ] ; then
-        echo 'Descriptive Variables detected:'
-        HelpMessage
-        WarrantyMessage
-        ConditionMessage
-        exit 0
-    elif [ "$DESCPOINT" = "8" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        exit 0
-    elif [ "$DESCPOINT" = "9" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        HelpMessage
-        exit 0
-    elif [ "$DESCPOINT" = "10" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        ConditionsMessage
-        exit 0
-    elif [ "$DESCPOINT" = "11" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        HelpMessage
-        ConditionsMessage
-        exit 0
-    elif [ "$DESCPOINT" = "12" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        WarrantyMessage
-        exit 0
-    elif [ "$DESCPOINT" = "13" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        WarrantyMessage
-        HelpMessage
-        exit 0
-    elif [ "$DESCPOINT" = "14" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        WarrantyMessage
-        ConditionsMessage
-        exit 0
-    elif [ "$DESCPOINT = "15"" ] ; then
-        echo 'Descriptive Variables detected:'
-        PrivacyPolicyMessage
-        WarrantyMessage
-        ConditionsMessage
-        HelpMessage
-        exit 0
-    fi
 }
 
 # This function sets up the commenting function in the SaveStats function
@@ -845,7 +447,7 @@ SaveStatsComments () {
         fi
         rm ./tempfile
     fi
-    ( echo "= = User-Generated Comments: = =" && echo "$LOGCOMMENTS" && printf "= = = = = = = = = =\n\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+    ( echo "= = User-Generated Comments: = =" && echo "$LOGCOMMENTS" && printf "= = = = = = = = = =\n\n" ) >> ./uf-unix-log.txt
 }
 
 # This function records and sets up the package managers used by the script for the save-statistics argument.
@@ -891,36 +493,39 @@ SaveStatsPkgLog () {
         ALTPKGMAN="Alternative package managers used"
     fi
     # For alternative package managers
-    for count in {0...7} ; do
-        if [ "$FLATPAKFLAG" = true ] ; then
-            STATUSFLATPAK="USED"
-            FLATPAKFLAG=false
-        elif [ "$SNAPFLAG" = true ] ; then
-            STATUSSNAP="USED"
-            FLATPAKFLAG=false
-        elif [ "$PORTSNAPFLAG" = true ] ; then
-            STATUSPORTSNAPSNAP="USED"
-            PORTSNAPFLAG=false
-        elif [ "$BREWFLAG" = true ] ; then
-            STATUSBREW="USED"
-            BREWFLAG=false
-        elif [ "$GEMFLAG" = true ] ; then
-            STATUSGEM="USED"
-            GEMFLAG=false
-        elif [ "$YARNFLAG" = true ] ; then
-            STATUSYARN="USED"
-            YARNFLAG=false
-        elif [ "$NPMFLAG" = true ] ; then
-            STATUSNPM="USED"
-            YARNFLAG=false
-        fi
-    done
+    if [ "$FLATPAKFLAG" = true ] ; then
+        STATUSFLATPAK="USED"
+        FLATPAKFLAG=false
+    fi
+    if [ "$SNAPFLAG" = true ] ; then
+        STATUSSNAP="USED"
+        FLATPAKFLAG=false
+    fi
+    if [ "$PORTSNAPFLAG" = true ] ; then
+        STATUSPORTSNAPSNAP="USED"
+        PORTSNAPFLAG=false
+    fi
+    if [ "$BREWFLAG" = true ] ; then
+        STATUSBREW="USED"
+        BREWFLAG=false
+    fi
+    if [ "$GEMFLAG" = true ] ; then
+        STATUSGEM="USED"
+        GEMFLAG=false
+    fi
+    if [ "$YARNFLAG" = true ] ; then
+        STATUSYARN="USED"
+        YARNFLAG=false
+    fi
+    if [ "$NPMFLAG" = true ] ; then
+        STATUSNPM="USED"
+        YARNFLAG=false
+    fi
     # Changes logfile depending on if 
     if [ "$OFFICIALPKGMAN" = "No official package managers used" -a "$ALTPKGMAN" = "No alternative package managers used" ] ; then
-        ( echo "No package managers at all detected!" ) >> ./update_full-bash-log/uf-bash-log.txt
-        DOEXIT1=true
+        ( echo "No package managers at all detected!" ) >> ./uf-unix-log.txt
     else
-        ( echo "$OFFICIALPKGMAN" && printf "$ALTPKGMAN\n FLATPAK:  $STATUSFLATPAK\n SNAP:     $STATUSSNAP\n PORTSNAP: $STATUSPORTSNAP\n BREW:     $STATUSBREW\n GEM:      $STATUSGEM\n NPM:      $STATUSNPM\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+        ( echo "$OFFICIALPKGMAN" && printf "$ALTPKGMAN\n FLATPAK:  $STATUSFLATPAK\n SNAP:     $STATUSSNAP\n PORTSNAP: $STATUSPORTSNAP\n BREW:     $STATUSBREW\n GEM:      $STATUSGEM\n NPM:      $STATUSNPM\n" ) >> ./uf-unix-log.txt
     fi
 }
 
@@ -928,103 +533,293 @@ SaveStatsPkgLog () {
 SaveStats () {
     # Checks if save stat is enabled
     if [ "$SAVECONFIRM" = true ] ; then
+        : '
         # Checks if directory exists
         if [ -d "$./update_full-bash-log" ] ; then
             echo "Log directory exists"
         else
             mkdir -p update_full-bash-log
         fi
+        '
         # Ends counting time
         TIMEEND=$(date +%s)
         TIMETOTAL=$(( $TIMEEND - $TIMEBEGIN ))
         # If no root detected
         if [ "$SAVESTATSNOROOT" = true ] ; then
-            ( echo "Log generated: $(date)" && printf "\t\n$DESC_ROOT\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+            ( echo "Log generated: $(date)" && printf "\t\n$DESC_ROOT\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./uf-unix-log.txt
             SaveStatsComments
             # Ending phrase
-            echo "Log Saved..."
-            echo "All done!"
-            printf "\tI hope this program was useful for you!\n\n"
-            printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+            printf "Log Saved...\nAll done!\n"
+            ExitStatement
             exit 1
         # If ping scan fails
         elif [ "$SAVESTATSNOPING" = true ] ; then
             DESCNOPING="Ping test failed, check domain ($PING_TARGET)"
-            ( echo "Log generated: $(date)" && printf "\t\n$DESCNOPING\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+            ( echo "Log generated: $(date)" && printf "\t\n$DESCNOPING\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./uf-unix-log.txt
             SaveStatsComments
             # Ending phrase
-            echo "Log Saved..."
-            echo "All done!"
-            printf "\tI hope this program was useful for you!\n\n"
-            printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+            printf "Log Saved...\nAll done!\n"
+            ExitStatement
             exit 1
         # If duplicate arguments are detcted
         elif [ "$SAVESTATDUPARGS" = true ] ; then
             DESCDUPARGS="Duplicate arguments detected"
-            ( echo "Log generated: $(date)" && printf "\t\n$DESCDUPARGS\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+            ( echo "Log generated: $(date)" && printf "\t\n$DESCDUPARGS\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./uf-unix-log.txt
             SaveStatsComments
             # Ending phrase
-            echo "Log Saved..."
-            echo "All done!"
-            printf "\tI hope this program was useful for you!\n\n"
-            printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+            printf "Log Saved...\nAll done!\n"
+            ExitStatement
             exit 1
         # If too many arguments are detected
         elif [ "$SAVESTATTOOMANYARGS" = true ] ; then
             DESCTOOMANYARGS="Too many arguments detected"
-            ( echo "Log generated: $(date)" && printf "\t\n$DESCTOOMANYARGS\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+            ( echo "Log generated: $(date)" && printf "\t\n$DESCTOOMANYARGS\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./uf-unix-log.txt
             SaveStatsComments
             # Ending phrase
-            echo "Log Saved..."
-            echo "All done!"
-            printf "\tI hope this program was useful for you!\n\n"
-            printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+            printf "Log Saved...\nAll done!\n"
+            ExitStatement
             exit 1
+        # If two or more incompatible functional arguments are detected
         elif [ "$SAVESTATINCOMPARGS" = true ] ; then
             DESCINCOPARGS="Incompatible arguments detected($INCOMPARGS_DETAIL)"
-            ( echo "Log generated $(date)" && printf "\t\n$DESCINCOPARGS\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+            ( echo "Log generated $(date)" && printf "\t\n$DESCINCOPARGS\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Unsuccessful Operation ---\n" ) >> ./uf-unix-log.txt
             SaveStatsComments
             # Ending phrase
-            echo "Log Saved..."
-            echo "All done!"
-            printf "\tI hope this program was useful for you!\n\n"
-            printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+            printf "Log Saved...\nAll done!\n"
+            ExitStatement
             exit 1
         # If everything else worked normally
         elif [ "$SAVESTATSNOROOT" = false -a "$SAVESTATSNOPING" = false ] ; then
             SaveStatsPkgLog
-            ( echo "Log generated: $(date)" && printf "\t\nScript run$DESC$DESC_LOG\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Successful Operation ---\n" ) >> ./update_full-bash-log/uf-bash-log.txt
+            ( echo "Log generated: $(date)" && printf "\t\nScript run$DESC$DESC_LOG\n" && printf "\nTime took: $TIMETOTAL sec.\n--- Successful Operation ---\n" ) >> ./uf-unix-log.txt
             SaveStatsComments
             # Ending phrase
-            echo "Log Saved..."
-            echo "All done!"
-            printf "\tI hope this program was useful for you!\n\n"
-            printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
-            if [ "$DOEXIT1" ] ; then
-                exit 1
-            fi
+            printf "Log Saved...\nAll done!\n"
+            ExitStatement
         fi
     else
         echo "All done!"
-        printf "\tI hope this program was useful for you!\n\n"
-        printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+        ExitStatement
     fi
 }
 
-# Starts counting time
-TIMEBEGIN=$(date +%s)
+# Action Flag Function
+ActionFlag () {
+    # Functional arguments
+    if [ "$1" = "--save-stats" -o "$1" = "-ss" ] ; then
+        DESC_SS=" and saving in log"
+        SAVECONFIRM=true
+    elif [ "$1" = "--no-test" -o "$1" = "-nt" ] ; then
+        DESC_NT=" skipping ping testing"
+        TEST_CONNECTION=false
+    elif [ "$1" = "--custom-domain" -o "$1" = "-cd" ] ; then
+        DESC_CD=" using custom domain"
+        CUSTOM_DOMAIN=true
+    elif [ "$1" = "--manual-all" -o "$1" = "-ma" ] ; then
+        DESC_MA=" using manual setting"
+        MANUAL_ALL=true
+    elif [ "$1" = "--disable-alt-managers" -o "$1" = "-dam" ] ; then
+        DESC_DAM=" skipping alternative package managers"
+        DISABLEALT=true
+    elif [ "$1" = "--yum-update" -o "$1" = "-yu" ] ; then
+        DESC_YU=" using YUM over DNF"
+        YUM_UPDATE=true
+    elif [ "$1" = "--alt-only" -o "$1" = "-ao" ] ; then
+        DESC_AO=" using only alternative package managers"
+        ALTONLY=true
+    # Descriptive Arguments
+    elif [ "$1" = "--conditions" -o "$1" = "-c" ] ; then
+        CONDITIONS=true
+    elif [ "$1" = "--privacy-policy" -o "$1" = "-pp" ] ; then
+        PRIVACYPOLICY=true
+    elif [ "$1" = "--warranty" -o "$1" = "-w" ] ; then
+        WARRANTY=true
+    elif [ "$1" = "--help" -o "$1" = "-h" ] ; then
+        HELP=true
+    else    
+        printf "ARGUMENT NOT RECOGNISED!!\n"
+        exit 1
+    fi
+    # Description
+    DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS"
+}
+
+# Preperation Function
+ActionPrep () {
+    # Seperates between descriptive and functional arguments
+    # Descriptive arguments below:
+    if [ "$CONDITIONS" = "true" -o "$PRIVACYPOLICY" = "true" -o "$WARRANTY" = "true" -o "$HELP" = "true" ] ; then
+        if [ "$HELP" = "true" ] ; then
+            HelpMessage
+        fi
+        if [ "$PRIVACYPOLICY" = "true" ] ; then
+            PrivacyPolicyMessage
+        fi
+        if [ "$CONDITIONS" = "true" ] ; then
+            ConditionMessage
+        fi
+        if [ "$WARRANTY" = "true" ] ; then
+            WarrantyMessage
+        fi
+        exit 0
+    # Functional argument errors below:
+    else
+        # Error if all arguments are attempted
+        if [ "$SAVECONFIRM" = "true" -a "$TEST_CONNECTION" = "false" -a "$CUSTOM_DOMAIN" = "true" -a "$MANUAL_ALL" = "true" -a "$DISABLEALT" = "true" -a "$YUM_UPDATE" = "true" -a "$ALTONLY" = "true" ] ; then
+            echo "All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
+            echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
+            if [ "$SAVECONFIRM" = true ] ; then
+                SAVESTATINCOMPARGS=true
+                INCOMPARGS_DETAIL="Likely all possible arguments attempted."
+                SaveStats
+            else
+                exit 1
+            fi
+        fi
+        # Error for mixed -ao/--alternate-only and -dam/--disable-alt-managers
+        if [ "$DISABLEALT" = "true" -a "$ALTONLY" = "true" ] ; then
+            echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
+            if [ "$SAVECONFIRM" = true ] ; then
+                SAVESTATINCOMPARGS=true
+                INCOMPARGS_DETAIL="Likely -dam / --disable-alt-managers and -ao / --alt-only mixed."
+                SaveStats
+            else
+                exit 1
+            fi
+        fi
+        # Error for mixed -nt/--no-test and -cd/--custom-domain
+        if [ "$CUSTOM_DOMAIN" = "true" -a "$TEST_CONNECTION" = "false" ] ; then
+            echo "Invalid argument combination (likely -nt/--no-test and -cd/--custom-domain). Relaunch script with valid combination."
+            if [ "$SAVECONFIRM" = true ] ; then
+                SAVESTATINCOMPARGS=true
+                INCOMPARGS_DETAIL="Likely -cd / --custom-domain and -nt / --no-test mixed."
+                SaveStats
+            else
+                exit 1
+            fi
+        fi
+        # Network Test
+        if [ "$TEST_CONNECTION" = "true" ] ; then
+            # Using default domain
+            if [ "$CUSTOM_DOMAIN" = "false" ] ; then
+                PING_TARGET="cloudflare.com"
+                NetworkTest
+            # Using custom domain
+            elif [ "$CUSTOM_DOMAIN" = "true" ] ; then
+                printf "Type domain: < "
+                read PING_TARGET
+                NetworkTest
+            fi   
+        fi
+        # Manual controls
+        if [ "$MANUAL_ALL" = "true" ] ; then
+            # Defines loops for program
+            MANQ_DEB1=true
+            MANQ_DEB2=true
+            MANQ_SUSE1=true
+            MANQ_SUSE2=true
+            # Makes all package manager questions manual
+            MANQ=" "
+            while [ "$MANQ_DEB1" = true ] ; do
+                printf "Are you updating a \e[3mDebian/Ubuntu-based system\e[0m?\n"
+                printf "[Y/y]es/[N/n]o < "
+                read MANQ_R1
+                if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
+                    MANQ_DEB1=false
+                elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
+                    while [ "$MANQ_DEB2" = true ] ; do
+                        printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
+                        printf " < "
+                        read MANQ_R2
+                        if [ "$MANQ_R2" = "1" ] ; then
+                            APT_UPGRADE="dist-upgrade"
+                            MANQ_DEB1=false
+                            MANQ_DEB2=false
+                            # Below two lines added to prevent SUSE loop from starting
+                            MANQ_SUSE1=false
+                            MANQ_DEB2=false
+                        elif [ "$MANQ_R2" = "2" ] ; then
+                            APT_UPGRADE="upgrade"
+                            MANQ_DEB1=false
+                            MANQ_DEB2=false
+                            MANQ_SUSE1=false
+                            MANQ_DEB2=false
+                        else
+                            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                        fi
+                    done
+                else
+                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                fi
+            done
+            while [ "$MANQ_SUSE1" = true ] ; do
+                printf "Are you updating an \e[3mOpenSUSE\e[0m system?\n"
+                printf "[Y/y]es/[N/n]o < "
+                read MANQ_R1
+                if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
+                    MANQ_SUSE1=false
+                elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
+                    while [ "$MANQ_SUSE2" = true ] ; do
+                        printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
+                        printf " < "
+                        read MANQ_R2
+                        if [ "$MANQ_R2" = "1" ] ; then
+                            SUSE_UPGRADE="dist-upgrade"
+                            MANQ_SUSE1=false
+                            MANQ_SUSE2=false
+                        elif [ "$MANQ_R2" = "2" ] ; then
+                            SUSE_UPGRADE="update"
+                            MANQ_SUSE1=false
+                            MANQ_SUSE2=false
+                        else
+                            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                        fi
+                    done
+                else
+                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                fi
+            done
+            printf "\tContinuing...\n"
+        fi
+    fi
+}
+
+# Duplicate Argument Function
+DupArgs () {
+    printf "NO DUPLICATE ARGS!!\n"
+    if [ "$SAVECONFIRM" = true ] ; then
+        SAVESTATDUPARGS=true
+        SaveStats
+    else
+        exit 1
+    fi
+}
+
+# Too Many Argument Functions
+TooManyArgs () {
+    printf "TOO MANY ARGUMENTS!!\n"
+    if [ "$SAVECONFIRM" = true ] ; then
+        SAVESTATTOOMANYARGS=true
+        SaveStats
+    else
+        exit 1
+    fi
+}
+
 # Main
 clear
+# Starts counting time
+TIMEBEGIN=$(date +%s)
 # Sets up initial variables
-# |- Defines argument position
-ARGPOS="$1"
-# |- Allows incompatible shell prompt to run
-RUNPROMPT=true
-# |- Sets up point system
-# |-- For functional arguments
-POINTVAR=0
-# |-- For descriptive arguments
-DESCPOINT=0
+MANUAL_ALL=false
+MANQ="-y"
+SAVECONFIRM=false
+TEST_CONNECTION=true
+CUSTOM_DOMAIN=false
+DISABLEALT=false
+ALTONLY=false
+DISABLEALT=false
+APT_UPGRADE="dist-upgrade"
 # |-- For checking root permission
 NOROOT=0
 # |- Prepares in case of --save-sttistics function
@@ -1038,40 +833,38 @@ SAVESTATDUPARGS=false
 SAVESTATTOOMANYARGS=false
 # Checks for root privileges
 if [ "$(whoami)" != "root" ] ; then
-    while [ "$RUNPROMPT" = true ] ; do
-        printf "\e[3mScript not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
-        sudo > /dev/null 2>&1
-        if [ "$?" != 127 -a "$?" = 1 ] ; then
-            if [ -n "$(sudo -l | grep "ALL")" ] ; then
-                printf "\t\e[3mUser $(whoami) has sudo permissions, continuing...\e[0m\n"
-                ROOTUSE="sudo"
-                RUNPROMPT=false
-            else
-                printf "no sudo priviledges detected...\n"
-                NOROOT=$(( $NOROOT + 1 ))
-            fi
+    printf "\e[3mScript not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
+    sudo > /dev/null 2>&1
+    if [ "$?" != 127 -a "$?" = 1 ] ; then
+        if [ -n "$(sudo -l | grep "ALL")" ] ; then
+            printf "\t\e[3mUser $(whoami) has sudo permissions, continuing...\e[0m\n"
+            ROOTUSE="sudo"
+            RUNPROMPT=false
         else
-            printf "sudo not found..."
+            printf "no sudo priviledges detected...\n"
             NOROOT=$(( $NOROOT + 1 ))
-            NOSUDO=true
         fi
-        doas > /dev/null 2>&1
-        if [ "$?" != 127 -a "$?" = 1  ] ; then
-            if [ -n "$(groups $(whoami) | grep "wheel")" ] ; then
-                printf "\t\e[3mUser $(whoami) has doas permissions, continuing...\e[0m\n"
-                ROOTUSE="doas"
-                RUNPROMPT=false
-            else
-                printf "no doas priviledges detected...\n"
-                NOROOT=$(( $NOROOT + 1 ))
-            fi
+    else
+        printf "sudo not found..."
+        NOROOT=$(( $NOROOT + 1 ))
+        NOSUDO=true
+    fi
+    doas > /dev/null 2>&1
+    if [ "$?" != 127 -a "$?" = 1  ] ; then
+        if [ -n "$(groups $(whoami) | grep "wheel")" ] ; then
+            printf "\t\e[3mUser $(whoami) has doas permissions, continuing...\e[0m\n"
+            ROOTUSE="doas"
+            RUNPROMPT=false
         else
-            printf "doas not found...\n"
+            printf "no doas priviledges detected...\n"
             NOROOT=$(( $NOROOT + 1 ))
-            NODOAS=true
         fi
-        RUNPROMPT=false
-    done
+    else
+        printf "doas not found...\n"
+        NOROOT=$(( $NOROOT + 1 ))
+        NODOAS=true
+    fi
+    RUNPROMPT=false
     if [ "$NOSUDO" = true -a "$NODOAS" = true ] ; then
         printf "\t\e[3;5mNeither sudo nor doas detected!\e[0m\n"
         if [ "$SAVECONFIRM" = true ] ; then
@@ -1095,126 +888,56 @@ else
     printf "\tScript is run as root\n"
     ROOTUSE=""
 fi
-if [ "$#" -ne "0" ] ; then
-    # Sets up value for looping
-    LOOPCOUNT=0
-    until [ "$LOOPCOUNT" -eq "$#" ] ; do
-        # Starts Loop
-        LOOPCOUNT=$(( $LOOPCOUNT + 1 ))
-        # Only installs updates from the OSs official package manager
-        if [ "$ARGPOS" = "--custom-domain" -o "$ARGPOS" = "-cd" ] ; then
-            POINTVAR=$(( $POINTVAR + 1 ))
-            INPUTDOMAIN=true
-        # Skip connection testing
-        elif [ "$ARGPOS" = "--no-test" -o "$ARGPOS" = "-nt" ] ; then
-            POINTVAR=$(( $POINTVAR + 2 ))
-        # Make decisions of automatically updating or not
-        elif [ "$ARGPOS" = "--manual-all" -o "$ARGPOS" = "-ma" ] ; then
-            POINTVAR=$(( $POINTVAR + 4 ))
-        # Skip alternative package managers
-        elif [ "$ARGPOS" = "--disable-alt-managers" -o "$ARGPOS" = "-dam" ] ; then
-            POINTVAR=$(( $POINTVAR + 8 ))
-        # Uses yum instead of dnf on Red-Hat based Linux distros
-        elif [ "$ARGPOS" = "--yum-update" -o "$ARGPOS" = "-yu" ] ; then
-            POINTVAR=$(( $POINTVAR + 16 ))
-        # Only updates alternative package managers
-        elif [ "$ARGPOS" = "--alt-only" -o "$ARGPOS" = "-ao" ] ; then
-            POINTVAR=$(( $POINTVAR + 32 ))
-        # Display help message
-        elif [ "$ARGPOS" = "--help" -o "$ARGPOS" = "-h" ] ; then
-            DESCPOINT=$(( $DESCPOINT + 1 ))
-        # Display conditions message
-        elif [ "$ARGPOS" = "--conditions" -o "$ARGPOS" = "-c" ] ; then
-            DESCPOINT=$(( $DESCPOINT + 2 ))
-        # Display warranty message
-        elif [ "$ARGPOS" = "--warranty" -o "$ARGPOS" = "-w" ] ; then
-            DESCPOINT=$(( $DESCPOINT + 4 ))
-        # Display privacy policy
-        elif [ "$ARGPOS" = "--privacy-policy" -o "$ARGPOS" = "-pp" ] ; then
-            DESCPOINT=$(( $DESCPOINT + 8 ))
-        # Save stats log
-        elif [ "$ARGPOS" = "--save-statistics" -o "$ARGPOS" = "-ss" ] ; then
-            SAVECONFIRM=true
-            DESC_LOG=" and saving in log"
-        # Checks for errors
+# Collect arguments
+if [ "$1" != "" ] ; then
+    ActionFlag $1
+    if [ "$2" != "" ] ; then
+        # Check for duplicates
+        if [ "$2" = "$1" ] ; then
+            DupArgs
         else
-            echo "Invalid arguments, relaunch script with legitimate arguments."
-            exit 1
-        fi
-        # Changes the position of argument and check for duplicate arguments.
-        if [ $LOOPCOUNT -gt 5 ] ; then
-            echo "ERROR LOOPCOUNT = $LOOPCOUNT"
-            if [ "$SAVECONFIRM" = true ] ; then
-                SAVESTATTOOMANYARGS=true
-                SaveStats
-            else
-                exit 1
-            fi
-        elif [ $LOOPCOUNT -gt 4 ] ; then
-            ARGPOS="$6"
-            if [ "$6" = "$5" -o "$6" = "$4" -o "$6" = "$3" -o "$6" = "$2" -o "$6" = "$1" ] ; then
-                echo "No duplicate arguments, relaunch script with legitimate arguments!"
-                if [ "$SAVECONFIRM" = true ] ; then
-                    SAVESTATDUPARGS=true
-                    SaveStats
+            ActionFlag $2
+            if [ "$3" != "" ] ; then
+                if [ "$3" = "$2" -o "$3" = "$1" ] ; then
+                    DupArgs
                 else
-                    exit 1
-                fi
-            fi
-        elif [ $LOOPCOUNT -gt 3 ] ; then
-            ARGPOS="$5"
-            if [ "$5" = "$4" -o "$5" = "$3" -o "$5" = "$2" -o "$5" = "$1" ] ; then
-                echo "No duplicate arguments, relaunch script with legitimate arguments!"
-                if [ "$SAVECONFIRM" = true ] ; then
-                    SAVESTATDUPARGS=true
-                    SaveStats
-                else
-                    exit 1
-                fi
-            fi
-        elif [ $LOOPCOUNT -gt 2 ] ; then
-            ARGPOS="$4"
-            if [ "$4" = "$3" -o "$4" = "$2" -o "$4" = "$1" ] ; then
-                echo "No duplicate arguments, relaunch script with legitimate arguments!"
-                if [ "$SAVECONFIRM" = true ] ; then
-                    SAVESTATDUPARGS=true
-                    SaveStats
-                else
-                    exit 1
-                fi
-            fi
-        elif [ $LOOPCOUNT -gt 1 ] ; then
-            ARGPOS="$3"
-            if [ "$3" = "$2" -o "$3" = "$1" ] ; then
-                echo "No duplicate arguments, relaunch script with legitimate arguments!"
-                if [ "$SAVECONFIRM" = true ] ; then
-                    SAVESTATDUPARGS=true
-                    SaveStats
-                else
-                    exit 1
-                fi
-            fi
-        elif [ $LOOPCOUNT -gt 0 ] ; then
-            ARGPOS="$2"
-            if [ "$2" = "$1" ] ; then
-                echo "No duplicate arguments, relaunch script with legitimate arguments!"
-                if [ "$SAVECONFIRM" = true ] ; then
-                    SAVESTATDUPARGS=true
-                    SaveStats
-                else
-                    exit 1
+                    ActionFlag $3
+                    if [ "$4" != "" ] ; then
+                        if [ "$4" = "$3" -o "$4" = "$2" -o "$4" = "$1" ] ; then
+                            DupArgs
+                        else
+                            ActionFlag $4
+                            if [ "$5" != "" ] ; then
+                                if [ "$5" = "$4" -o "$5" = "$3" -o "$5" = "$2" -o "$5" = "$1" ] ; then
+                                    DupArgs
+                                else
+                                    ActionFlag $5
+                                    if [ "$6" = "$5" -o "$6" = "$4" -o "$6" = "$3" -o "$6" = "$2" -o "$6" = "$1" ] ; then
+                                        DupArgs
+                                    else
+                                        ActionFlag $6
+                                        if [ "$7" != "" ] ; then
+                                            if [ "$7" = "$6" -o "$7" = "$5" -o "$7" = "$4" -o "$7" = "$3" -o "$7" = "$2" -o "$7" = "$1" ] ; then
+                                                DupArgs
+                                            fi
+                                        else
+                                            ActionFlag $7
+                                            if [ "$#" -gt 7 ] ; then
+                                                TooManyArgs
+                                            fi
+                                        fi
+                                    fi
+                                fi
+                            fi
+                        fi
+                    fi
                 fi
             fi
         fi
-    done
+    fi
 fi
-# If there was no descriptive argument point, use the functional arguments
-if [ "$DESCPOINT" -gt "0" ] ; then
-    PointDecideDesc
-else
-    PointDecideFunc
-fi
-printf "Running \e[4mUpdate_Full [GENERIC UNIX]\e[01;m script\e[1m$DESC$DESC_LOG"
+ActionPrep
+printf "Running \e[4mUpdate_Full [GENERIC UNIX]\e[01;m script\e[1m$DESC_LOG"
 printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
 CHECK_PKG=true
