@@ -1,6 +1,6 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Updated by February 24th, 2023
+# Updated by March 4th, 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # More information about license in readme and bottom.
 
@@ -116,7 +116,7 @@ done
 printf "\n\e[1mPermissions changed for $SCRIPTNAME!\e[0m\n"
 # Describes changes
 echo "$SCRIPTNAME's owner is now '$OWNERNAME' in group '$GROUPNAME'."
-printf "This script will now delf-destruct.\n\tIf you need different permissions and ownership, change it manually!\n"
+printf "This first-setup script will now delf-destruct.\n\tIf you need different permissions and ownership, change it manually!\n"
 rm -f $0
 exit 0
 
