@@ -536,12 +536,14 @@ SaveStatsPkgLog () {
 SaveStats () {
     # Checks if save stat is enabled
     if [ "$SAVECONFIRM" = true ] ; then
+        : '
         # Checks if directory exists
         if [ -d "$./update_full-bash-log" ] ; then
             echo "Log directory exists"
         else
             mkdir -p update_full-bash-log
         fi
+        '
         # Ends counting time
         TIMEEND=$(date +%s)
         TIMETOTAL=$(( $TIMEEND - $TIMEBEGIN ))
