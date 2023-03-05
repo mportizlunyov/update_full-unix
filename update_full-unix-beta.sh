@@ -810,6 +810,7 @@ clear
 TIMEBEGIN=$(date +%s)
 # Sets up initial variables
 MANUAL_ALL=false
+MANQ="-y"
 SAVECONFIRM=false
 TEST_CONNECTION=true
 CUSTOM_DOMAIN=false
