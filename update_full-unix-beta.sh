@@ -100,7 +100,7 @@ ApkUpdate () {
 PacmanUpdate () {
     PACMANFLAG=true
     printf "\t\e[1mARCH LINUX detected\e[0m\n\n"
-    $ROOTUSE apk pacman -Syu $MANQ
+    $ROOTUSE pacman -Syu $MANQ
 }
 
 # For OpenSUSE Linux
