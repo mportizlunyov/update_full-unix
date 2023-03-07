@@ -1,6 +1,7 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Updated: March 4th 2023
+# Version 1.1.0
+# Updated: March 5th 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
@@ -52,6 +53,27 @@ DnfUpdate () {
     $ROOTUSE dnf check-update $MANQ
     $ROOTUSE dnf update $MANQ
     $ROOTUSE dnf autoremove $MANQ
+}
+
+# For Slackware Linux-based operating systems
+SlackpkgUpdate () {
+    if [ "$MANQ" != " " ] ; then
+        MANQ="-batch=on -default_answer=y"
+    fi
+    SLACKFLAG=true
+    printf "\t\e[1mSLACKWARE detected\e[0m\n\n"
+    $ROOTUSE slackpkg $MANQ update
+    $ROOTUSE slackpkg $MANQ install-new
+    $ROOTUSE slackpkg $MANQ upgrade-all
+    $ROOTUSE slackpkg $MANQ clean-system
+}
+
+# For Solus Linux-based operating systems
+EopkgUpdate () {
+    EOPKGFLAG=true
+    printf "\t\e[1mSOLUS detected\e[0m\n\n"
+    $ROOTUSE eopkg update-repo
+    $ROOTUSE eopkg upgrade $MANQ
 }
 
 # Also for Red Hat Enterprise Linux-based operating systems
@@ -243,6 +265,20 @@ CheckPkgAuto () {
             if [ "$?" != "127" -a "$?" = "1" ] ; then
                 NixUpdate
                 # No 'CHECK_PKG=false', due to Nix package manager being able to exist with other distros' package managers
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            slackpkg > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "0" ] ; then
+                SlackpkgUpdate
+                CHECK_PKG=false
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            eopkg > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" ] ; then
+                EopkgUpdate
+                CHECK_PKG=false
             else
                 NOPKG=$(( $NOPKG + 1 ))
             fi
@@ -487,6 +523,10 @@ SaveStatsPkgLog () {
         OFFICIALPKGMAN="PKG_ADD package manager used."
     elif [ "$XBPSFLAG" = true ] ; then
         OFFICIALPKGMAN="XBPS package manager used."
+    elif [ "$SLACKFLAG" = true ] ; then
+        OFFICIALPKGMAN="Slackware package manager used."
+    elif [ "$EOPKGFLAG" = true ] ; then
+        OFFICIALPKGMAN="Eopkg package manager used."
     fi
     # Changes variable ALTPKGMAN as nessesary
     if [ "$FLATPAKFLAG" = true -o "$SNAPFLAG" = true -o "$PORTSNAPFLAG" = true -o "$BREWFLAG" = true -o "$GEMFLAG" = true -o "$YARNFLAG" = true -o "$NPMFLAG" = true ] ; then
