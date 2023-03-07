@@ -26,6 +26,8 @@ The script supports the following package managers (Full list below):
  - X Binary Package System      (xbps)    [Void Linux]
  - swupd                        (swupd)   [Clear Linux]
  - Nix                          (nix)     [NixOS Linux]
+ - Slackpkg                     (slackpkg)[Slackware Linux]
+ - Eopkg                        (eopkg)   [Solus Linux]
  - Pkg                          (pkg)     [FreeBSD]
  - Pkg_add                      (pkg_add) [OpenBSD]
 
