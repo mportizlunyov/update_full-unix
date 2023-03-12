@@ -1,7 +1,7 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.1.0
-# Updated: March 5th 2023
+# Version 1.1.1
+# Updated: March 11th 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
@@ -381,43 +381,27 @@ CheckPkgAuto () {
  HelpMessage () {
     echo ' = = ='
     echo 'This bash script allows for a full update on most UNIX systems, on most package managers.'
-    # Explain two different types of arguments for this script
+    # Explain two types of arguments for script
     printf "This script uses two different kinds of arguments: \e[1mFunctional (changes how the script works)\e[0m and \e[1mDescriptive (gives information about the script)\e[0m.\n"
-    # Explain Functional arguments
-    printf "\n\tFunctional arguments:\n"
-    # Explain --no-test / -nt
-    printf "\nBy default, the script attempts to test the connection of the computer to the internet before attempting to update ay packages.\n"
-    printf "\tTo disable this, add the \e[1m--no-test\e[1;0m or \e[1m-nt\e[0m argument when running the script.\n"
-    # Explain --custom-domain / -cd
-    printf '\nBy default, the script uses the domain \e[1mcloudflare.com\e[0m in the ping test. One can also customise the domain that the update script attempts to contact.\n'
-    printf "\tThis can be done by adding \e[1m--custom-domain\e[0m or \e[1m-cd\e[0m argument.\n"
-    # Explain --manual-all / -ma
-    printf "\nOne can make any questions the package manager makes to be manually decided. By default, any questions are answered with \e[1m-y\e[0m.\n"
-    printf "\tTo disable this, add the \e[1m--manual-all\e[0m or \e[1m-ma\e[0m argument.\n"
-    # Explain --disable-alt-managers / -dam
-    printf "\nBy default, the script attempts to check the existence of and update packages from alternative package managers such as Flatpaks and Snaps.\n"
-    printf "\tTo disable this, add the \e[1m--disable-alt-managers\e[0m or \e[1m-dam\e[0m argument.\n"
-    # Explain yum-update / -yu
-    printf "\nBy default, the script uses the more modern DNF package manager instead of the older YUM package manager if the Linux distrobution is Red-Hat based.\n"
-    printf "\tTo use YUM instead of DNF, add the \e[1m--yum-update\e[0m or \e[1m-yu\e[0m argument.\n"
-    # Explain --alt-only / -ao
-    printf "\nBy default, the script attempts to update both the official distrobution packag managers and any alternative package managers installed.\n"
-    printf "\tTo only update alternative package managers, add the \e[1m--alt-only\e[0m or \e[1m-ao\e[0m argument.\n"
-    #Explain --save-statistics / -ss
-    printf "\nBy default, the script does not save any statistics on errors or general usage.\n"
-    printf "\tTo save statistics into a log file (and even make comments for context!), add the \e[1m--save-statistics\e[0m or \e[1m--ss\e[0m argument.\n"
-    # Esplain Descriptive arguments
-    printf "\n\tDescriptive arguments:\n"
-    # Exlpain --help / -h
-    printf "\nTo print the help statement, add the \e[1m--help\e[0m or \e[1m-h\e[0m argument\n"
-    # Explain --conditions / -c
-    printf "\nTo print the conditions of redistribution, add the \e[1m--conditions\e[0m or \e[1m-c\e[0m argument.\n"
-    # Explain --warranty / -w
-    printf "\nTo print the warranty of the program, add the \e[1m--warranty\e[0m or \e[1m-w\e[0m argument.\n"
-    # Explain --privacy-policy / -pp
-    printf "\nTo print the privacy policy of the program, add the \e[1m--privacy-policy\e[0m or \e[1m-pp\e[0m argument.\n"
-    # Basic security advice
-    printf "\nIt is safest to limit writing permissions to avoid malicious/accidental tampering!\n"
+    # Begin Functional arguments
+    printf "\nFunctional arguments:\n"
+    printf "\tTo disable ping testing, add the \e[1m--no-test\e[0m or \e[1m-nt\e[0m.*\n"
+    printf "\tTo use a custom domain for ping testing, add the \e[1m--custom-domain\e[0m or \e[1m-cd\e[0m argument.*\n"
+    printf "\t\t*Incompatible with each other (custom domain cannot be used if no ping tests are performed)\n"
+    printf "\tTo use YUM instead of DNF, add the \e[1m--yum-update\e[0m or \e[1m-yu\e[0m argument.**\n"
+    printf "\tTo only update alternative pacakge managers, add the \e[1m--alt-only\e[0m or \e[1m-ao\e[0m argument.**\n"
+    printf "\t\t**Incompatible with each other (YUM cannot be updated if native package managers are not used at all)\n"
+    printf "\tTo only update naticve package managers, add the \e[1m--disable-alt-managers\e[0m or \e[1m-dam\e[0m argument.\n"
+    printf "\tTo save a log file (and even add comments!), add the \e[1m--save-statistics\e[0m or \e[1m-ss\e[0m argument.\n"
+    # Begin Descriptive arguments
+    printf "\nDescriptive arguments:\n"
+    printf "\tTo print the help statement, add the \e[1m--help\e[0m or \e[1m-h\e[0m argument.\n"
+    printf "\tTo print the conditions of redistribution, add the \e[1m--conditions\e[0m or \e[1m-c\e[0m argument.\n"
+    printf "\tTo print the warranty of the program, add the \e[1m--warranty\e[0m or \e[1m-w\e[0m argument.\n"
+    printf "\tTo print the privacy policy of the program, add the \e[1m--privacy-policy\e[0m or \e[1m-pp\e[0m argument.\n"
+    # Begin Security Advisories
+    printf "\nTo prevent tempering, change the PERMISSIONS."
+    printf "\nAdditionally, verify the script using the checksums found at https://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\n\n"
  }
 
 # Prints the conditions under which the GPLv3 license allows the program to be redistributed
