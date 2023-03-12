@@ -45,9 +45,9 @@ This script uses two different kinds of arguments:
     If both types of arguments are used, only the Descriptive arguments are used (meaning no updates performed).
 
 Functional Arguments:
-    To disable ping testing, add the --no-test or -nt.
+    To disable ping testing, add the --no-test or -nt.*
     To use a custom domain for ping testing, add the --custom-domain or -cd argument.*
-    To make all package manager options manual, add the --manual-all or -ma argument.*
+    To make all package manager options manual, add the --manual-all or -ma argument.
     To use YUM instead of DNF, add the --yum-update or -yu argument.**
     To only update alternative pacakge managers, add the --alt-only or -ao argument.**
     To only update naticve package managers, add the --disable-alt-managers or -dam argument.
