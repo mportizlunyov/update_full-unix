@@ -15,7 +15,6 @@ The following are not supported:
  - PWSH (PowerSHell)
  - Less mainstream shells
 
-
 The script supports the following package managers (Full list below):
  - Aptitude                     (apt-get) [Debian]
  - Dandified YUM                (dnf)     [Red Hat]
@@ -41,43 +40,29 @@ Besides the built-in package managers, Update_Full also supports these additiona
  - Node.JS Package Manager (npm)
 
 This bash script allows for a full update on most UNIX systems, on most package managers.
-This script uses two different kinds of arguments: Functional (changes how the script works) and Descriptive (gives information about the script).
-    Functional arguments:
+This script uses two different kinds of arguments: 
+    Functional (changes how the script works) and Descriptive (gives information about the script).
+    If both types of arguments are used, only the Descriptive arguments are used (meaning no updates performed).
 
-By default, the script attempts to test the connection of the computer to the internet before attempting to update ay packages.
-    To disable this, add the --no-test or -nt argument when running the script.
+Functional Arguments:
+    To disable ping testing, add the --no-test or -nt.
+    To use a custom domain for ping testing, add the --custom-domain or -cd argument.*
+    To make all package manager options manual, add the --manual-all or -ma argument.*
+    To use YUM instead of DNF, add the --yum-update or -yu argument.**
+    To only update alternative pacakge managers, add the --alt-only or -ao argument.**
+    To only update naticve package managers, add the --disable-alt-managers or -dam argument.
+    To save a log file (and even add comments!), add the --save-statistics or -ss argument.
 
-By default, the script uses the domain cloudflare.com in the ping test. One can also customise the domain that the update script attempts to contact.
-    This can be done by adding --custom-domain or -cd argument.
+*Incompatible with each other (custom domain cannot be used if no ping tests are performed)
+**Incompatible with each other (YUM cannot be updated if native package managers are not used at all)
 
-One can make any questions the package manager makes to be manually decided. By default, any questions are answered with -y.
-    To disable this, add the --manual-all or -ma argument.
-
-By default, the script attempts to check the existence of and update packages from alternative package managers such as Flatpaks and Snaps.
-    To disable this, add the --disable-alt-managers or -dam argument.
-
-By default, the script uses the more modern DNF package manager instead of the older YUM package manager if the Linux distrobution is Red-Hat based.
-    To use YUM instead of DNF, add the --yum-update or -yu argument.
-
-By default, the script attempts to update both the official distrobution packag managers and any alternative package managers installed.
-    To only update alternative package managers, add the --alt-only or -ao argument.
-
-By default, the script does not save any statistics on errors or general usage.
-    To save statistics into a log file (and even make comments for context!), add the --save-statistics or -ss argument.
-
-   Descriptive arguments:
+Descriptive arguments:
     To print the help statement, add the --help or -h argument.
     To print the conditions of redistribution, add the --conditions or -c argument.
     To print the warranty of the program, add the --warranty or -w argument.
     To print the privacy policy of the program, add the --privacy-policy or -pp argument.
     It is safest to limit writing permissions to avoid malicious/accidental tampering!
 
-[certain arguments can be combined, in no strict order, in order to acheive the desired result*]
-
-*Not all arguments can be combined.
-Descriptive arguments are incompatible with any functional argument and doing so will run the inputted descriptive argument (including -save-statistics).
-    Similarly, --no-test / -nt is incompatible with --custom-domain / -cd, and will result in error (cannot use custom domain if ping test was denied).
-    --alt-only / -ao is incompatible with --disable-alt-managers / -dam, and will also result in an error (contratictory arguments).
 
 I hope you enjoy using this program!
 
