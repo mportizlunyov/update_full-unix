@@ -1,9 +1,9 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.1.1
-# Updated: March 11th 2023
+# Version 1.2.1
+# Updated: April 01st 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
-# Compatible and tested with BASH, SH, KSH, ASH, and ZSH.
+# Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
 # More information about license in readme and bottom.
 # Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
@@ -57,7 +57,7 @@ DnfUpdate () {
 
 # For Slackware Linux-based operating systems
 SlackpkgUpdate () {
-    if [ "$MANQ" != " " ] ; then
+    if [ "$MANUAL_ALL" != "true" ] ; then
         MANQ="-batch=on -default_answer=y"
     fi
     SLACKFLAG=true
@@ -122,7 +122,11 @@ ApkUpdate () {
 PacmanUpdate () {
     PACMANFLAG=true
     printf "\t\e[1mARCH LINUX detected\e[0m\n\n"
-    $ROOTUSE pacman -Syu $MANQ
+    if [ "$MANUAL_ALL" != "true" ] ; then
+        yes | $ROOTUSE pacman -Syu
+    else
+        $ROOTUSE pacman -Syu
+    fi
 }
 
 # For OpenSUSE Linux
@@ -233,6 +237,8 @@ CheckPkgAuto () {
             brew > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "1" ] ; then
                 BrewUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
             fi
             portsnap > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "0" ] ; then
@@ -360,15 +366,15 @@ CheckPkgAuto () {
         else
             printf "\t\e[1mSkipping Official Package managers...\e[0m\n\n"
         fi
-        if [ "$NOPKG" = "17" ] ; then
+        if [ "$NOPKG" = "19" ] ; then
             printf "\t\e[1mNO KNOWN PACKAGE MANAGERS DETECTED AT ALL!!!\e[0m\n\n"
             CHECK_PKG=false
-        elif [ "$NOPKG" = "10" -a "$BREWFLAG" = true ] ; then
+        elif [ "$NOPKG" = "12" -a "$BREWFLAG" = true ] ; then
             printf "\t\e[1mNO OFFICIAL PACKAGE MANAGERS DETECTED, BREW UPDATED...\e[0m\n"
             printf "Using MacOS?\n\n"
             CHECK_PKG=false
-        elif [ "$NOPKG" = "10" ] ; then
-            printf "\t\e[1mNO KNOWN OFFICIAL PACKAGE MANAGERS DETECTED!\e[0m\n\n"
+        elif [ "$NOPKG" = "12" ] ; then
+            printf "\t\e[1mNO KNOWN NATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
             CHECK_PKG=false
         elif [ "$NOPKG" = "7" ] ; then
             printf "\t\e[1mNO KNOWN ALTERNATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
@@ -445,29 +451,33 @@ PrivacyPolicyMessage () {
 
 # This function sets up the commenting function in the SaveStats function
 SaveStatsComments () {
-    printf "\n\n\e[1mType in the letters \"~esc~\" to exit the comments bar\n= = =\n"
-    COMMENTINPUT=""
-    # Loops until user types in 'esc'
-    until [ "$COMMENTINPUT" = "~esc~" ] ; do
-        ( echo "$COMMENTINPUT" ) >> ./tempfile || {
-            # In case user deletes tempfile while writing comments
-            tempfileISSUEFLAG=true
-            break
-        }
-        printf "TYPE: "
-        read COMMENTINPUT
-    done
-    printf "= = =\n\e[0m"
-    if [ "tempfileISSUEFLAG" = true ] ; then
-        LOGCOMMENTS="tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED"
-    else
-        LOGCOMMENTS="$(cat ./tempfile)"
-        if [ "$LOGCOMMENTS" = "" ] ; then
-            LOGCOMMENTS="*No comments by user*"
+    if [ "$NOCOMMENT" != "true" ] ; then
+        printf "\n\n\e[1mType in the letters \"~esc~\" to exit the comments bar\n= = =\n"
+        COMMENTINPUT=""
+        # Loops until user types in 'esc'
+        until [ "$COMMENTINPUT" = "~esc~" ] ; do
+            ( echo "$COMMENTINPUT" ) >> ./tempfile || {
+                # In case user deletes tempfile while writing comments
+                tempfileISSUEFLAG=true
+                break
+            }
+            printf "TYPE: "
+            read COMMENTINPUT
+        done
+        printf "= = =\n\e[0m"
+        if [ "tempfileISSUEFLAG" = true ] ; then
+            LOGCOMMENTS="tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED"
+        else
+            LOGCOMMENTS="$(cat ./tempfile)"
+            if [ "$LOGCOMMENTS" = "" ] ; then
+                LOGCOMMENTS="*No comments by user*"
+            fi
+            rm ./tempfile
         fi
-        rm ./tempfile
+        ( echo "= = User-Generated Comments: = =" && echo "$LOGCOMMENTS" && printf "= = = = = = = = = =\n\n" ) >> ./uf-unix-log.txt
+    else
+        ( echo "!= = NO COMMENTS = =!" ) >>./uf-unix-log.txt
     fi
-    ( echo "= = User-Generated Comments: = =" && echo "$LOGCOMMENTS" && printf "= = = = = = = = = =\n\n" ) >> ./uf-unix-log.txt
 }
 
 # This function records and sets up the package managers used by the script for the save-statistics argument.
@@ -557,14 +567,6 @@ SaveStatsPkgLog () {
 SaveStats () {
     # Checks if save stat is enabled
     if [ "$SAVECONFIRM" = true ] ; then
-        : '
-        # Checks if directory exists
-        if [ -d "$./update_full-bash-log" ] ; then
-            echo "Log directory exists"
-        else
-            mkdir -p update_full-bash-log
-        fi
-        '
         # Ends counting time
         TIMEEND=$(date +%s)
         TIMETOTAL=$(( $TIMEEND - $TIMEBEGIN ))
@@ -630,40 +632,96 @@ SaveStats () {
 # Action Flag Function
 ActionFlag () {
     # Functional arguments
-    if [ "$1" = "--save-stats" -o "$1" = "-ss" ] ; then
-        DESC_SS=" and saving in log"
-        SAVECONFIRM=true
-    elif [ "$1" = "--no-test" -o "$1" = "-nt" ] ; then
-        DESC_NT=" skipping ping testing"
-        TEST_CONNECTION=false
-    elif [ "$1" = "--custom-domain" -o "$1" = "-cd" ] ; then
-        DESC_CD=" using custom domain"
-        CUSTOM_DOMAIN=true
-    elif [ "$1" = "--manual-all" -o "$1" = "-ma" ] ; then
-        DESC_MA=" using manual setting"
-        MANUAL_ALL=true
-    elif [ "$1" = "--disable-alt-managers" -o "$1" = "-dam" ] ; then
-        DESC_DAM=" skipping alternative package managers"
-        DISABLEALT=true
-    elif [ "$1" = "--yum-update" -o "$1" = "-yu" ] ; then
-        DESC_YU=" using YUM over DNF"
-        YUM_UPDATE=true
-    elif [ "$1" = "--alt-only" -o "$1" = "-ao" ] ; then
-        DESC_AO=" using only alternative package managers"
-        ALTONLY=true
-    # Descriptive Arguments
-    elif [ "$1" = "--conditions" -o "$1" = "-c" ] ; then
-        CONDITIONS=true
-    elif [ "$1" = "--privacy-policy" -o "$1" = "-pp" ] ; then
-        PRIVACYPOLICY=true
-    elif [ "$1" = "--warranty" -o "$1" = "-w" ] ; then
-        WARRANTY=true
-    elif [ "$1" = "--help" -o "$1" = "-h" ] ; then
-        HELP=true
-    else    
-        printf "ARGUMENT NOT RECOGNISED!!\n"
-        exit 1
-    fi
+    case $1 in
+        "-"* | "--"*)
+            MAIN_ARG=$1
+            case $MAIN_ARG in
+                "--"*"")
+                    MAIN_ARG=$(echo "$MAIN_ARG" | cut -c "3-")
+                    ;;
+                "-"*"")
+                    MAIN_ARG=$(echo "$MAIN_ARG" | cut -c "2-")
+                    ;;
+            esac
+            case $MAIN_ARG in
+                # Functional Arguments
+                "save-statistics" | "ss")
+                    DESC_SS=" and saving in log"
+                    SAVECONFIRM=true
+                    ;;
+                "no-test" | "nt")
+                    DESC_NT=" skipping ping testing"
+                    TEST_CONNECTION=false
+                    ;;
+                "custom-domain" | "cd")
+                    DESC_CD=" using custom domain"
+                    CUSTOM_DOMAIN=true
+                    ;;
+                "manual-all" | "ma")
+                    DESC_MA=" using manual setting"
+                    MANUAL_ALL=true
+                    ;;
+                "disable-alt-managers" | "dam")
+                    DESC_DAM=" skipping alternative package managers"
+                    DISABLEALT=true
+                    ;;
+                "yum-update" | "yu")
+                    DESC_YU=" using YUM over DNF"
+                    YUM_UPDATE=true
+                    ;;
+                "alt-only" | "ao")
+                    DESC_AO=" using only alternative package managers"
+                    ALTONLY=true
+                    ;;
+                # Descriptive Arguments
+                "conditions" | "c")
+                    CONDITIONS=true
+                    ;;
+                "warranty" | "w")
+                    WARRANTY=true
+                    ;;
+                "help" | "h")
+                    HELP=true
+                    ;;
+                *)
+                    printf "ARGUMENT NOT RECOGNISED!! (DEF)\n"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        ":"*"")
+            ARG_MOD=$1
+            ARG_MOD="$(echo "$ARG_MOD" | cut -c "2-")"
+            case $MAIN_ARG in
+                "save-statistics" | "ss")
+                    case $ARG_MOD in
+                        "no-comment" | "nc")
+                            NOCOMMENT=true
+                            ;;
+                        *)
+                            printf "ARGUMENT NOT RECOGNISED!! (ABC)\n"
+                            exit 1
+                            ;;
+                    esac
+                    ;;
+                "custom-domain" | "cd")
+                    PRELOADED_CUSTOM_DOMAIN=$ARG_MOD
+                    PRE_CD=true
+                    ;;
+                *)
+                    printf "NO PREVIOUS MAATCHING MAIN ARGUMENT\n"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        "")
+            ;;
+        *)
+            printf "ARGUMENT NOT RECOGNISED!! (GGG)\n"
+            echo "$1"
+            exit 1
+            ;;
+    esac
     # Description
     DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS"
 }
@@ -722,19 +780,6 @@ ActionPrep () {
                 exit 1
             fi
         fi
-        # Network Test
-        if [ "$TEST_CONNECTION" = "true" ] ; then
-            # Using default domain
-            if [ "$CUSTOM_DOMAIN" = "false" ] ; then
-                PING_TARGET="cloudflare.com"
-                NetworkTest
-            # Using custom domain
-            elif [ "$CUSTOM_DOMAIN" = "true" ] ; then
-                printf "Type domain: < "
-                read PING_TARGET
-                NetworkTest
-            fi   
-        fi
         # Manual controls
         if [ "$MANUAL_ALL" = "true" ] ; then
             # Defines loops for program
@@ -748,62 +793,96 @@ ActionPrep () {
                 printf "Are you updating a \e[3mDebian/Ubuntu-based system\e[0m?\n"
                 printf "[Y/y]es/[N/n]o < "
                 read MANQ_R1
-                if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
-                    MANQ_DEB1=false
-                elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
-                    while [ "$MANQ_DEB2" = true ] ; do
-                        printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
-                        printf " < "
-                        read MANQ_R2
-                        if [ "$MANQ_R2" = "1" ] ; then
-                            APT_UPGRADE="dist-upgrade"
-                            MANQ_DEB1=false
-                            MANQ_DEB2=false
-                            # Below two lines added to prevent SUSE loop from starting
-                            MANQ_SUSE1=false
-                            MANQ_DEB2=false
-                        elif [ "$MANQ_R2" = "2" ] ; then
-                            APT_UPGRADE="upgrade"
-                            MANQ_DEB1=false
-                            MANQ_DEB2=false
-                            MANQ_SUSE1=false
-                            MANQ_DEB2=false
-                        else
-                            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-                        fi
-                    done
-                else
-                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-                fi
+                case $MANQ_R1 in
+                    "N" | "n" | "No" | "No" | "NO" | "nO")
+                        MANQ_DEB1=false
+                        ;;
+                    "Y" | "y" | "Yes" | "yes" | "YES" | "yES")
+                        while [ "$MANQ_DEB2" = true ] ; do
+                            printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
+                            printf " < "
+                            read MANQ_R2
+                            case $MANQ_R2 in
+                                "1")
+                                    APT_UPGRADE="dist-upgrade"
+                                    MANQ_DEB1=false
+                                    MANQ_DEB2=false
+                                    # Below two lines added to prevent SUSE loop from starting
+                                    MANQ_SUSE1=false
+                                    MANQ_DEB2=false
+                                    ;;
+                                "2")
+                                    APT_UPGRADE="upgrade"
+                                    MANQ_DEB1=false
+                                    MANQ_DEB2=false
+                                    MANQ_SUSE1=false
+                                    MANQ_DEB2=false
+                                    ;;
+                                *)
+                                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                                    ;;
+                            esac
+                        done
+                        ;;
+                    *)
+                        printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                        ;;
+                esac
             done
             while [ "$MANQ_SUSE1" = true ] ; do
                 printf "Are you updating an \e[3mOpenSUSE\e[0m system?\n"
                 printf "[Y/y]es/[N/n]o < "
                 read MANQ_R1
-                if [ "$MANQ_R1" = "N" -o "$MANQ_R1" = "n" -o "$MANQ_R1" = "No" -o "$MANQ_R1" = "no" ] ; then
-                    MANQ_SUSE1=false
-                elif [ "$MANQ_R1" = "Y" -o "$MANQ_R1" = "y" -o "$MANQ_R1" = "Yes" -o "$MANQ_R1" = "yes" ] ; then
-                    while [ "$MANQ_SUSE2" = true ] ; do
-                        printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
-                        printf " < "
-                        read MANQ_R2
-                        if [ "$MANQ_R2" = "1" ] ; then
-                            SUSE_UPGRADE="dist-upgrade"
-                            MANQ_SUSE1=false
-                            MANQ_SUSE2=false
-                        elif [ "$MANQ_R2" = "2" ] ; then
-                            SUSE_UPGRADE="update"
-                            MANQ_SUSE1=false
-                            MANQ_SUSE2=false
-                        else
-                            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-                        fi
-                    done
-                else
-                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
-                fi
+                case $MANQ_R1 in
+                    "N" | "n" | "No" | "no" | "NO")
+                        MANQ_SUSE1=false
+                        MANQ_R1=false
+                        ;;
+                    "Y" | "y" | "Yes" | "yes" | "YES")
+                        while [ "$MANQ_SUSE2" = true ] ; do
+                            printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
+                            printf " < "
+                            read MANQ_R2
+                            case $MANQ_R2 in
+                                "1")
+                                    SUSE_UPGRADE="dist-upgrade"
+                                    MANQ_SUSE1=false
+                                    MANQ_SUSE2=false
+                                    ;;
+                                "2")
+                                    SUSE_UPGRADE="update"
+                                    MANQ_SUSE1=false
+                                    MANQ_SUSE2=false
+                                    ;;
+                                *)
+                                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                                    ;;
+                            esac
+                        done
+                        ;;
+                    *)
+                        printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                        ;;
+                esac
             done
             printf "\tContinuing...\n"
+        fi
+        # Network Test
+        if [ "$TEST_CONNECTION" = "true" ] ; then
+            # Using default domain
+            if [ "$CUSTOM_DOMAIN" = "false" ] ; then
+                PING_TARGET="cloudflare.com"
+                NetworkTest
+            # Using custom domain
+            elif [ "$CUSTOM_DOMAIN" = "true" ] ; then
+                if [ "$PRE_CD" = "true" ] ; then
+                    PING_TARGET=$PRELOADED_CUSTOM_DOMAIN
+                else
+                    printf "Type domain: < "
+                    read PING_TARGET
+                fi
+                NetworkTest
+            fi
         fi
     fi
 }
@@ -920,31 +999,37 @@ if [ "$1" != "" ] ; then
         if [ "$2" = "$1" ] ; then
             DupArgs
         else
+            PREVARG=$1
             ActionFlag $2
             if [ "$3" != "" ] ; then
                 if [ "$3" = "$2" -o "$3" = "$1" ] ; then
                     DupArgs
                 else
+                    PREVARG=$2
                     ActionFlag $3
                     if [ "$4" != "" ] ; then
                         if [ "$4" = "$3" -o "$4" = "$2" -o "$4" = "$1" ] ; then
                             DupArgs
                         else
+                            PREVARG=$3
                             ActionFlag $4
                             if [ "$5" != "" ] ; then
                                 if [ "$5" = "$4" -o "$5" = "$3" -o "$5" = "$2" -o "$5" = "$1" ] ; then
                                     DupArgs
                                 else
+                                    PREVARG=$4
                                     ActionFlag $5
                                     if [ "$6" = "$5" -o "$6" = "$4" -o "$6" = "$3" -o "$6" = "$2" -o "$6" = "$1" ] ; then
                                         DupArgs
                                     else
+                                        PREVARG=$5
                                         ActionFlag $6
                                         if [ "$7" != "" ] ; then
                                             if [ "$7" = "$6" -o "$7" = "$5" -o "$7" = "$4" -o "$7" = "$3" -o "$7" = "$2" -o "$7" = "$1" ] ; then
                                                 DupArgs
                                             fi
                                         else
+                                            PREVARG=$6
                                             ActionFlag $7
                                             if [ "$#" -gt 7 ] ; then
                                                 TooManyArgs
@@ -959,8 +1044,9 @@ if [ "$1" != "" ] ; then
             fi
         fi
     fi
+    ActionPrep
 fi
-ActionPrep
+
 printf "Running \e[4mUpdate_Full [GENERIC UNIX]\e[01;m script\e[1m$DESC_LOG"
 printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
