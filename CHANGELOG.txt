@@ -1,3 +1,12 @@
+Release 1.2.1 (April 01st 2023)
+ = = =
+ - Improved argument handling
+   - Added modifiable arguments, which will allow for more features!
+     - Two modifiable arguments include :no-comment / :nc (for --save-statistics) and :<CUSTOM URL> (for --custom-domain)
+     - More to come soon!
+ - Fixed issue with incorrect package manager scoring system
+ - General re-writes for better readability
+
 Release 1.1.1 (March 11th 2023)
  = = =
  - Improved help message
