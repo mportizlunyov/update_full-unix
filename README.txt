@@ -7,37 +7,38 @@ This script is compatible and tested with:
  - SH   (SHell)
  - KSH  (Korne SHell)
  - ASH  (Almquist SHell)
+ - DASH (Debian Almquist Shell)
  - ZSH  (Z SHell)
 The following are not supported:
  - CSH  (C SHell)
  - TCSH (Tenex Command SHell)
  - FISH (FIsh SHell)
  - PWSH (PowerSHell)
- - Less mainstream shells
+ - More exotic shells
 
 The script supports the following package managers (Full list below):
- - Aptitude                     (apt-get) [Debian]
- - Dandified YUM                (dnf)     [Red Hat]
- - Yellow Dog Updator, Modified (yum)     [Red Hat]
- - Pacman                       (pacman)  [Arch]
- - Alpine Linux Package Keeper  (apk)     [Alpine Linux]
- - Zypper                       (zypper)  [OpenSUSE]
- - X Binary Package System      (xbps)    [Void Linux]
- - swupd                        (swupd)   [Clear Linux]
- - Nix                          (nix)     [NixOS Linux]
- - Slackpkg                     (slackpkg)[Slackware Linux]
- - Eopkg                        (eopkg)   [Solus Linux]
- - Pkg                          (pkg)     [FreeBSD]
- - Pkg_add                      (pkg_add) [OpenBSD]
+ - apt-get  (Advanced Package Manager)     [Debian]
+ - dnf      (Dandified YUM)                [Red Hat]
+ - yum      (Yellow Dog Updator, Modified) [Red Hat]
+ - pacman   (pacman)                       [Arch]
+ - apk      (Alpine Linux Package Keeper)  [Alpine Linux]
+ - Zypper   (Zypper)                       [OpenSUSE]
+ - xbps     (X Binary Package System)      [Void Linux]
+ - swupd    (swupd)                        [Clear Linux]
+ - nix      (Nix)                          [NixOS Linux]
+ - slackpkg (Slackpkg)                     [Slackware Linux]
+ - eopkg    (Eopkg)                        [Solus Linux]
+ - pkg      (Pkg)                          [FreeBSD]
+ - pkg_add  (Pkg_Add)                      [OpenBSD]
 
 Besides the built-in package managers, Update_Full also supports these additional package managers:
- - Flatpak                 (flatpak)
- - Snapcraft               (snapd)
- - Brew                    (brew)
- - Portsnap                (portsnap)
- - RubyGems                (gem)
- - Yarn                    (yarn)
- - Node.JS Package Manager (npm)
+ - flatpak  (Flatpak)
+ - snapd    (Snapcraft)
+ - brew     (Brew)
+ - portsnap (Portsnap)
+ - rubygem  (RubyGems)
+ - yarn     (yarn)
+ - npm      (Node.JS Package Manager)
 
 This bash script allows for a full update on most UNIX systems, on most package managers.
 This script uses two different kinds of arguments: 
@@ -47,11 +48,13 @@ This script uses two different kinds of arguments:
 Functional Arguments:
     To disable ping testing, add the --no-test or -nt.*
     To use a custom domain for ping testing, add the --custom-domain or -cd argument.*
+        To pre-load a custom argument, add the :no-comment or :nc argument.
     To make all package manager options manual, add the --manual-all or -ma argument.
     To use YUM instead of DNF, add the --yum-update or -yu argument.**
     To only update alternative pacakge managers, add the --alt-only or -ao argument.**
     To only update naticve package managers, add the --disable-alt-managers or -dam argument.
     To save a log file (and even add comments!), add the --save-statistics or -ss argument.
+        To disable commenting, add the :no-comment or :nc argument.
 
 *Incompatible with each other (custom domain cannot be used if no ping tests are performed)
 **Incompatible with each other (YUM cannot be updated if native package managers are not used at all)
