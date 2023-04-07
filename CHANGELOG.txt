@@ -1,3 +1,11 @@
+Release 1.2.2 (April 07th 2023)
+ = = =
+ - Updated Help message
+   - Added a section on Modifiers
+   - Made it easier to read
+ - Added --yum-update/-yu and --alt-only/-ao incompatability message
+ - Added a suggestion to use --help/-h when a wrong argumet is used
+
 Release 1.2.1 (April 01st 2023)
  = = =
  - Improved argument handling
