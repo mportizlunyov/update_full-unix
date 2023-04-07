@@ -1,7 +1,7 @@
-# Written by Mikhail Patricio Ortiz-Lunyov
+ Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.2.1
-# Updated: April 01st 2023
+# Version 1.2.2
+# Updated: April 07th 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
@@ -388,25 +388,34 @@ CheckPkgAuto () {
     echo ' = = ='
     echo 'This bash script allows for a full update on most UNIX systems, on most package managers.'
     # Explain two types of arguments for script
-    printf "This script uses two different kinds of arguments: \e[1mFunctional (changes how the script works)\e[0m and \e[1mDescriptive (gives information about the script)\e[0m.\n"
+    printf "This script uses three types of arguments: \e[1mFunctional (changes how the script works)\e[0m, \e[1mModifiers (modifies aspects of a functional argument)\e[0m, and \e[1mDescriptive (gives information about the script)\e[0m.\n"
     # Begin Functional arguments
     printf "\nFunctional arguments:\n"
-    printf "\tTo disable ping testing, add the \e[1m--no-test\e[0m or \e[1m-nt\e[0m.*\n"
-    printf "\tTo use a custom domain for ping testing, add the \e[1m--custom-domain\e[0m or \e[1m-cd\e[0m argument.*\n"
-    printf "\t\t*Incompatible with each other (custom domain cannot be used if no ping tests are performed)\n"
-    printf "\tTo use YUM instead of DNF, add the \e[1m--yum-update\e[0m or \e[1m-yu\e[0m argument.**\n"
-    printf "\tTo only update alternative pacakge managers, add the \e[1m--alt-only\e[0m or \e[1m-ao\e[0m argument.**\n"
-    printf "\t\t**Incompatible with each other (YUM cannot be updated if native package managers are not used at all)\n"
-    printf "\tTo only update naticve package managers, add the \e[1m--disable-alt-managers\e[0m or \e[1m-dam\e[0m argument.\n"
-    printf "\tTo save a log file (and even add comments!), add the \e[1m--save-statistics\e[0m or \e[1m-ss\e[0m argument.\n"
+    printf "\e[1m--no-test / -nt\e[0m\t Disable ping testing\n"
+    printf "\t*Not compatible with \e[1m-cd\e[0m\n"
+    printf "\e[1m--custom-domain / -cd\e[0m\t Use a custom domain (manual input by default)\n"
+    printf "\t*Not compatible with \e[1m-nt\e[0m\n"
+    printf "\t^Modifier available\n"
+    printf "\e[1m--yum-update / -yu\e[0m\t Use YUM instead of DNF on Red-Hat\n"
+    printf "\t*Not compatible with \e[1m-ao\e[0m\n"
+    printf "\e[1m--disable-alt-managers / -dam\e[0m\t Skip alternative package managers\n"
+    printf "\t*Not compatible with \e[1m-ao\e[0m\n"
+    printf "\e[1m--alt-only / -ao\e[0m\t Skip native package managers\n"
+    printf "\t*Not compatible with \e[1m-ao\e[0m\n"
+    printf "\e[1m--save-statistics / -ss\e[0m\t Save a log file (and add comments!)\n"
+    printf "\t^Modifier available\n"
+    # Begin Modifiers
+    printf "\nModifiers:\n"
+    printf "\e[1m:<DOMAIN>\e[0m\t\t Preload custom domain for \e[1m-cd\e[0m\n"
+    printf "\e[1m:no-comment / :nc\e[0m\t Skip commenting for \e[1m-ss\e[0m\n"
     # Begin Descriptive arguments
     printf "\nDescriptive arguments:\n"
-    printf "\tTo print the help statement, add the \e[1m--help\e[0m or \e[1m-h\e[0m argument.\n"
-    printf "\tTo print the conditions of redistribution, add the \e[1m--conditions\e[0m or \e[1m-c\e[0m argument.\n"
-    printf "\tTo print the warranty of the program, add the \e[1m--warranty\e[0m or \e[1m-w\e[0m argument.\n"
-    printf "\tTo print the privacy policy of the program, add the \e[1m--privacy-policy\e[0m or \e[1m-pp\e[0m argument.\n"
+    printf "\e[1m--help / -h \t\e[0m\t Print Help statement\n"
+    printf "\e[1m--conditions / -c\e[0m\t Print Conditions of redistribution\n"
+    printf "\e[1m--warrenty / -w \e[0m\t Print Warranty\n"
+    printf "\e[1m--privacy-policy / -pp\e[0m\t Print Privacy Policy\n"
     # Begin Security Advisories
-    printf "\nTo prevent tempering, change the PERMISSIONS."
+    printf "\n\nTo prevent tempering, change the PERMISSIONS."
     printf "\nAdditionally, verify the script using the checksums found at https://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\n\n"
  }
 
@@ -684,7 +693,8 @@ ActionFlag () {
                     HELP=true
                     ;;
                 *)
-                    printf "ARGUMENT NOT RECOGNISED!! (DEF)\n"
+                    echo "ARGUMENT NOT RECOGNISED!! (001)"
+                    printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                     exit 1
                     ;;
             esac
@@ -697,9 +707,11 @@ ActionFlag () {
                     case $ARG_MOD in
                         "no-comment" | "nc")
                             NOCOMMENT=true
+                            DESC_SS=" and saving in log(no comments)"
                             ;;
                         *)
-                            printf "ARGUMENT NOT RECOGNISED!! (ABC)\n"
+                            echo "ARGUMENT NOT RECOGNISED!! (002)"
+                            printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                             exit 1
                             ;;
                     esac
@@ -709,7 +721,8 @@ ActionFlag () {
                     PRE_CD=true
                     ;;
                 *)
-                    printf "NO PREVIOUS MAATCHING MAIN ARGUMENT\n"
+                    echo "NO PREVIOUS MATCHING MAIN ARGUMENT"
+                    printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                     exit 1
                     ;;
             esac
@@ -717,13 +730,11 @@ ActionFlag () {
         "")
             ;;
         *)
-            printf "ARGUMENT NOT RECOGNISED!! (GGG)\n"
-            echo "$1"
+            echo "ARGUMENT NOT RECOGNISED!! (003)"
+            printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
             exit 1
             ;;
     esac
-    # Description
-    DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS"
 }
 
 # Preperation Function
@@ -744,8 +755,9 @@ ActionPrep () {
             WarrantyMessage
         fi
         exit 0
-    # Functional argument errors below:
+    # Functional arguments below:
     else
+        # Functional argument ERRORS
         # Error if all arguments are attempted
         if [ "$SAVECONFIRM" = "true" -a "$TEST_CONNECTION" = "false" -a "$CUSTOM_DOMAIN" = "true" -a "$MANUAL_ALL" = "true" -a "$DISABLEALT" = "true" -a "$YUM_UPDATE" = "true" -a "$ALTONLY" = "true" ] ; then
             echo "All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
@@ -769,6 +781,17 @@ ActionPrep () {
                 exit 1
             fi
         fi
+        # Error for mixed -yu/--yum-update and -ao/--alt-only
+        if [ "$YUM_UPDATE" = "true" -a "$ALTONLY" = "true" ] ; then
+        echo "Invalid argument combination (likely -ao/--alt-only and -yu/--yum-update). Relaunch script with valid combination."
+            if [ "$SAVECONFIRM" = true ] ; then
+                SAVESTATINCOMPARGS=true
+                INCOMPARGS_DETAIL="Likely -yu / --yum-update and -ao / --alt-only mixed."
+                SaveStats
+            else
+                exit 1
+            fi
+        fi
         # Error for mixed -nt/--no-test and -cd/--custom-domain
         if [ "$CUSTOM_DOMAIN" = "true" -a "$TEST_CONNECTION" = "false" ] ; then
             echo "Invalid argument combination (likely -nt/--no-test and -cd/--custom-domain). Relaunch script with valid combination."
@@ -780,6 +803,7 @@ ActionPrep () {
                 exit 1
             fi
         fi
+        # Functional argument
         # Manual controls
         if [ "$MANUAL_ALL" = "true" ] ; then
             # Defines loops for program
@@ -881,6 +905,7 @@ ActionPrep () {
                     printf "Type domain: < "
                     read PING_TARGET
                 fi
+                DESC_CD=" using custom domain($PING_TARGET)"
                 NetworkTest
             fi
         fi
@@ -925,7 +950,7 @@ DISABLEALT=false
 APT_UPGRADE="dist-upgrade"
 # |-- For checking root permission
 NOROOT=0
-# |- Prepares in case of --save-sttistics function
+# |- Prepares in case of --save-statistics function
 # |-- For event of no root
 SAVESTATSNOROOT=false
 # |-- For event of failed ping
@@ -1044,10 +1069,11 @@ if [ "$1" != "" ] ; then
             fi
         fi
     fi
-    ActionPrep
 fi
-
-printf "Running \e[4mUpdate_Full [GENERIC UNIX]\e[01;m script\e[1m$DESC_LOG"
+ActionPrep
+# Description
+DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS"
+printf "Running \e[4mUpdate_Full [GENERIC UNIX] 1.2.2\e[01;m script\e[1m$DESC_LOG"
 printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
 CHECK_PKG=true
