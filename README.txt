@@ -1,5 +1,9 @@
+Welcome to Update_Full-UNIX!
+
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of Operating Systems through their respective package managers.
+
 This simple script can be used for standard home users, power users with home labs, and even enterprise servers if desired.
+(For more information, check the wiki: https://github.com/mportizlunyov/update_full-unix/wiki)
 
 This UNIX script is designed especially for Linux, but are also compatible with BSD and Mac OS (due to them being UNIX-based).
 This script is compatible and tested with:
@@ -16,7 +20,7 @@ The following are not supported:
  - PWSH (PowerSHell)
  - More exotic shells
 
-The script supports the following package managers (Full list below):
+The script supports the following native package managers (Full list below):
  - apt-get  (Advanced Package Manager)     [Debian]
  - dnf      (Dandified YUM)                [Red Hat]
  - yum      (Yellow Dog Updator, Modified) [Red Hat]
@@ -31,40 +35,51 @@ The script supports the following package managers (Full list below):
  - pkg      (Pkg)                          [FreeBSD]
  - pkg_add  (Pkg_Add)                      [OpenBSD]
 
-Besides the built-in package managers, Update_Full also supports these additional package managers:
+Besides the native package managers, Update_Full also supports these additional package managers:
  - flatpak  (Flatpak)
  - snapd    (Snapcraft)
  - brew     (Brew)
  - portsnap (Portsnap)
  - rubygem  (RubyGems)
  - yarn     (yarn)
+ - pipx     (pipx)
  - npm      (Node.JS Package Manager)
 
-This bash script allows for a full update on most UNIX systems, on most package managers.
-This script uses two different kinds of arguments: 
-    Functional (changes how the script works) and Descriptive (gives information about the script).
-    If both types of arguments are used, only the Descriptive arguments are used (meaning no updates performed).
+This script uses three types of arguments:
+    Functional (changes how the script works),
+    Modifiers (modifies aspects of a functional argument), and
+    Descriptive (gives information about the script).
 
-Functional Arguments:
-    To disable ping testing, add the --no-test or -nt.*
-    To use a custom domain for ping testing, add the --custom-domain or -cd argument.*
-        To pre-load a custom argument, add the :no-comment or :nc argument.
-    To make all package manager options manual, add the --manual-all or -ma argument.
-    To use YUM instead of DNF, add the --yum-update or -yu argument.**
-    To only update alternative pacakge managers, add the --alt-only or -ao argument.**
-    To only update naticve package managers, add the --disable-alt-managers or -dam argument.
-    To save a log file (and even add comments!), add the --save-statistics or -ss argument.
-        To disable commenting, add the :no-comment or :nc argument.
+Functional arguments:
+--no-test / -nt	 Disable ping testing
+	*Not compatible with -cd
+--custom-domain / -cd	 Use a custom domain (manual input by default)
+	*Not compatible with -nt
+	^Modifier available
+--yum-update / -yu	 Use YUM instead of DNF on Red-Hat
+	*Not compatible with -ao
+--disable-alt-managers / -dam	 Skip alternative package managers
+	*Not compatible with -ao
+--alt-only / -ao	 Skip native package managers
+	*Not compatible with -ao
+--custom-log-path / -clp	 Define a custom PATH for the log-file
+	*Must be run with -ss
+	^Modifier available
+--manual-all / -ma	 Leaves package manager prompts unanswered, and asks for custom domain and log file PATH is not preloaded
+	*Will make script unable to be run in a cronjob
+--save-statistics / -ss	 Save a log file (and add comments!)
+	^Modifier available
 
-*Incompatible with each other (custom domain cannot be used if no ping tests are performed)
-**Incompatible with each other (YUM cannot be updated if native package managers are not used at all)
+Modifiers:
+:<DOMAIN>		 Preload custom domain for -cd
+:no-comment / :nc	 Skip commenting for -ss
+:<LOG FILE PATH>	 Defines custom PATH for log-file for -clp
 
 Descriptive arguments:
-    To print the help statement, add the --help or -h argument.
-    To print the conditions of redistribution, add the --conditions or -c argument.
-    To print the warranty of the program, add the --warranty or -w argument.
-    To print the privacy policy of the program, add the --privacy-policy or -pp argument.
-    It is safest to limit writing permissions to avoid malicious/accidental tampering!
+--help / -h 		 Print Help statement
+--conditions / -c	 Print Conditions of redistribution
+--warrenty / -w 	 Print Warranty
+--privacy-policy / -pp	 Print Privacy Policy
 
 
 I hope you enjoy using this program!
