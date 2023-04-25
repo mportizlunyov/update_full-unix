@@ -55,11 +55,13 @@ RedHatUpdate (){
         $ROOTUSE yum update $MANQ
         $ROOTUSE yum autoremove $MANQ
     else
-        DNFFLAG=true
-        printf "\t\e[1mRED HAT (DNF) detected\e[0m\n\n"
-        $ROOTUSE dnf check-update $MANQ
-        $ROOTUSE dnf update $MANQ
-        $ROOTUSE dnf autoremove $MANQ
+        if [ "$DNF_USED_ONCE" != "true" ] ; then
+            DNFFLAG=true
+            printf "\t\e[1mRED HAT (DNF) detected\e[0m\n\n"
+            $ROOTUSE dnf check-update $MANQ
+            $ROOTUSE dnf update $MANQ
+            $ROOTUSE dnf autoremove $MANQ_DEB1
+        fi
     fi
 }
 
@@ -322,6 +324,7 @@ CheckPkgAuto () {
             fi
             dnf > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = 0 ] ; then
+                DNF_USED_ONCE=true
                 RedHatUpdate
                 CHECK_PKG=false
             else
@@ -1202,7 +1205,7 @@ fi
 ActionPrep
 # Description
 DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS$DESC_CLP"
-printf "Running \e[4mUpdate_Full [GENERIC UNIX] 1.2.2\e[01;m script\e[1m$DESC_LOG"
+printf "Running \e[4mUpdate_Full [GENERIC UNIX] 1.3.2\e[01;m script\e[1m$DESC_LOG"
 printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
 CHECK_PKG=true
