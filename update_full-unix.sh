@@ -55,7 +55,7 @@ RedHatUpdate (){
         $ROOTUSE yum update $MANQ
         $ROOTUSE yum autoremove $MANQ
     else
-        if [ "$DNF_USED_ONCE" != "true" ] ; then
+        if [ "$DNF_USED_ONCE" = "true" ] ; then
             DNFFLAG=true
             printf "\t\e[1mRED HAT (DNF) detected\e[0m\n\n"
             $ROOTUSE dnf check-update $MANQ
