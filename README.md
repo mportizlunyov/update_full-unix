@@ -4,7 +4,51 @@ Update_Full is a suite of Free & Open-Source scripts written in several shell sc
 
 This simple script can be used for standard home users, power users with home labs, and even enterprise servers if desired.
 
-(For more information, check the wiki: https://github.com/mportizlunyov/update_full-unix/wiki)
+---
+
+### To quickly (but potentially insecurely) try it out without installing, use
+#### `$SHELL <(curl https://raw.githubusercontent.com/mportizlunyov/update_full-unix/main/update_full-unix.sh) [ARGUMENTS]`
+
+---
+
+### (For more information, check the wiki: https://github.com/mportizlunyov/update_full-unix/wiki)
+
+This script uses three types of arguments:
+ - Functional (changes how the script works)
+ - Modifiers (modifies aspects of a functional argument)
+ - Descriptive (gives information about the script)
+
+#### **Functional arguments:**
+
+ - `--no-test` / `-nt` Disable ping testing
+    - *<ins>Not compatible</ins> with `-cd`
+ - `--custom-domain` / `-cd` Use a custom domain (manual input by default)
+	- *<ins>Not compatible</ins> with `-nt`
+	- ^_Modifier available_
+ - `--yum-update` / `-yu` Use YUM instead of DNF on Red-Hat
+	- *<ins>Not compatible</ins> with `-ao`
+ - `--disable-alt-managers` / `-dam` Skip alternative package managers
+	- *<ins>Not compatible</ins> with `-ao`
+ - `--alt-only` / `-ao` Skip native package managers
+	- *<ins>Not compatible</ins> with `-ao`
+ - `--custom-log-path` / `-clp` Define a custom PATH for the log-file
+	- *<ins>Must be run</ins> with `-ss`
+	- ^_Modifier available_
+ - `--manual-all / -ma` Leaves package manager prompts unanswered, and asks for custom domain and log file PATH is not preloaded
+	- ***Will make script unable to be run in a cronjob**
+ - `--save-statistics` / `-ss` Save a log file (and add comments!)
+	- ^_Modifier available_
+
+#### **Modifiers:**
+ - `:<DOMAIN>`		 Preload custom domain for -cd
+ - `:no-comment` / `:nc`	 Skip commenting for -ss
+ - `:<LOG FILE PATH>`	 Preload custom PATH for log-file for -clp
+
+#### **Descriptive arguments:**
+ - `--help` / `-h` 		 Print Help statement
+ - `--conditions` / `-c`	 Print Conditions of redistribution
+ - `--warrenty` / `-w` 	 Print Warranty
+ - `--privacy-policy` / `-pp`	 Print Privacy Policy
 
 This UNIX script is designed especially for Linux, but are also compatible with BSD and Mac OS (due to them being UNIX-based).
 This script is **_compatible_ and _tested_** with:
@@ -49,43 +93,6 @@ Besides the native package managers, Update_Full also supports these _additional
 
  ### Of course, **more package managers coming soon!**
 
-This script uses three types of arguments:
- - Functional (changes how the script works),
- - Modifiers (modifies aspects of a functional argument), and
- - Descriptive (gives information about the script).
-
-
-Functional arguments:
-
- - `--no-test` / `-nt` Disable ping testing
-    - ***Not compatible** with `-cd`
- - `--custom-domain` / `-cd` Use a custom domain (manual input by default)
-	- ***Not compatible** with `-nt`
-	- ^_Modifier available_
- - `--yum-update` / `-yu` Use YUM instead of DNF on Red-Hat
-	- ***Not compatible** with `-ao`
- - `--disable-alt-managers` / `-dam` Skip alternative package managers
-	- ***Not compatible** with `-ao`
- - `--alt-only` / `-ao` Skip native package managers
-	- ***Not compatible** with `-ao`
- - `--custom-log-path` / `-clp` Define a custom PATH for the log-file
-	- ***Must be run** with `-ss`
-	- ^_Modifier available_
- - `--manual-all / -ma` Leaves package manager prompts unanswered, and asks for custom domain and log file PATH is not preloaded
-	- ***Will make script unable to be run in a cronjob**
- - `--save-statistics` / `-ss` Save a log file (and add comments!)
-	- ^_Modifier available_
-
-Modifiers:
- - `:<DOMAIN>`		 Preload custom domain for -cd
- - `:no-comment` / `:nc`	 Skip commenting for -ss
- - `:<LOG FILE PATH>`	 Defines custom PATH for log-file for -clp
-
-Descriptive arguments:
- - `--help` / `-h` 		 Print Help statement
- - `--conditions` / `-c`	 Print Conditions of redistribution
- - `--warrenty` / `-w` 	 Print Warranty
- - `--privacy-policy` / `-pp`	 Print Privacy Policy
 
  ## I hope you enjoy using this program!
  ### Please leave a star if you liked it!
