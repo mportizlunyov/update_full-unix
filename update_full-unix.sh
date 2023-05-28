@@ -1,7 +1,7 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.3.2
-# Updated: April 17th 2023
+# Version 1.3.3
+# Updated: May 28th 2023
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
@@ -48,21 +48,31 @@ AptUpdate () {
 
 # For Red-Hat based Linux Operating Systems
 RedHatUpdate (){
-    if [ "$YUM_UPDATE" = "true" ] ; then
-        YUMFLAG=true
-        printf "\t\e[1mRED HAT (YUM) detected\e[0m\n\n"
-        $ROOTUSE yum check-update $MANQ
-        $ROOTUSE yum update $MANQ
-        $ROOTUSE yum autoremove $MANQ
-    else
-        if [ "$DNF_USED_ONCE" = "true" ] ; then
+    case $1 in
+        # For YUM (legacy)
+        "YUM")
+            YUMFLAG=true
+            printf "\t\e[1mRED HAT ($1) detected\e[0m\n\n"
+            $ROOTUSE yum check-update $MANQ
+            $ROOTUSE yum update $MANQ
+            $ROOTUSE yum autoremove $MANQ
+            ;;
+        # For DNF (modern)
+        "DNF")
             DNFFLAG=true
-            printf "\t\e[1mRED HAT (DNF) detected\e[0m\n\n"
+            printf "\t\e[1mRED HAT ($1) detected\e[0m\n\n"
             $ROOTUSE dnf check-update $MANQ
             $ROOTUSE dnf update $MANQ
             $ROOTUSE dnf autoremove $MANQ_DEB1
-        fi
-    fi
+            ;;
+        # For RPM-OSTREE (found in Fedora SilverBlue, Kinoite, and CoreOS)
+        "RPM-OSTREE")
+            OSTREEFLAG=true
+            printf "\t\e[1m RED HAT ($1) detected\e[0m\n\n"
+            rpm-ostree upgrade --check
+            rpm-ostree upgrade
+            ;;
+    esac
 }
 
 # For Slackware Linux-based operating systems
@@ -84,14 +94,6 @@ EopkgUpdate () {
     printf "\t\e[1mSOLUS detected\e[0m\n\n"
     $ROOTUSE eopkg update-repo
     $ROOTUSE eopkg upgrade $MANQ
-}
-
-# For Fedora SilverBlue
-OstreeUpdate () {
-    OSTREEFLAG=true
-    printf "\t\e[1m FEDORA SILVERBLUE detected\e[0m\n\n"
-    rpm-ostree upgrade --check
-    rpm-ostree upgrade
 }
 
 # For Flatpaks
@@ -143,18 +145,23 @@ ZypperUpdate () {
     ZYPPERFLAG=true
     printf "\t\e[1mOpenSUSE LINUX detected\e[0m\n\n"
     $ROOTUSE zypper list-updates
+    echo "#### 1 ####"
     $ROOTUSE zypper patch-check
+    echo "#### 2 ####"
     $ROOTUSE zypper $SUSE_UPGRADE $MANQ
+    echo "#### 3 ####"
     $ROOTUSE zypper patch $MANQ
+    echo "#### 4 ####"
     $ROOTUSE zypper purge-kernels
+    echo "#### 5 ####"
 }
 
 # For Nix OS Linux
 NixUpdate () {
     NIXFLAG=true
-    printf "\t\e[1mNIX OS or PACKAGE MANAGER detected\e[0m\n\n"
+    printf "\t\e[1mNIX PACKAGE MANAGER detected\e[0m\n\n"
     $ROOTUSE nix-channel --update
-    $ROOTUSE nix-env --upgrade
+    $ROOTUSE nix-env -u '*'
     $ROOTUSE nix-env --delete-generations old
     $ROOTUSE nix-collect-garbage
 }
@@ -217,7 +224,7 @@ NpmUpdate () {
     $ROOTUSE npm update
 }
 
-# For Yarn
+# For Yarn Package Manager
 YarnUpdate () {
     YARNFLAG=true
     printf "\t\e[1mYARN detected\e[0m\n\n"
@@ -232,6 +239,15 @@ PipUpdate () {
     # Will Make version for pip3 and pip2 (for legacy support), Pipx for now
     pipx upgrade-all
 }
+
+# For Guix Package Manager
+GuixUpdate() {
+    GUIXFLAG=true
+    printf "\t\e[1mGuix detected\e[0m\n\n"
+    $ROOTUSE guix pull
+    $ROOTUSE guix upgrade
+}
+
 # Selects the correct package manager to modify packages
 CheckPkgAuto () {
     NOPKG=0
@@ -280,6 +296,20 @@ CheckPkgAuto () {
             else
                 NOPKG=$(( $NOPKG + 1 ))
             fi
+            nix > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "nixos")" = "" ] ; then
+                NixUpdate
+                CHECK_PKG=false
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            guix > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "guix")" = "" ] ; then
+                GuixUpdate
+                CHECK_PKG=false
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
             if [ "$ALTONLY" = true ] ; then
                 CHECK_PKG=false
             fi
@@ -287,10 +317,20 @@ CheckPkgAuto () {
             printf "\t\e[1mSkipping Alternative Package managers...\e[0m\n\n"
         fi
         if [ "$ALTONLY" = false ] ; then
+            if [ "$ALTONLY" = true ] ; then
+                CHECK_PKG=false
+            fi
             nix > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
+            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "nixos")" != "" ] ; then
                 NixUpdate
-                # No 'CHECK_PKG=false', due to Nix package manager being able to exist with other distros' package managers
+                CHECK_PKG=false
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            guix > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "guix")" != "" ] ; then
+                GuixUpdate
+                CHECK_PKG=false
             else
                 NOPKG=$(( $NOPKG + 1 ))
             fi
@@ -322,24 +362,27 @@ CheckPkgAuto () {
             else
                 NOPKG=$(( $NOPKG + 1 ))
             fi
-            dnf > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = 0 ] ; then
-                DNF_USED_ONCE=true
-                RedHatUpdate
-                CHECK_PKG=false
+            if [ "$YUM_UPDATE" = "true" ] ; then
+                yum > /dev/null 2>&1
+                if [ "$?" != "127" -a "$?" = 0 ] ; then
+                    RedHatUpdate YUM
+                    CHECK_PKG=false
+                else
+                    NOPKG=$(($NOPKG + 1 ))
+                fi
             else
-                NO_PKG=$(($NOPKG + 1 ))
-            fi
-            yum > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = 0 ] ; then
-                RedHatUpdate
-                CHECK_PKG=false
-            else
-                NO_PKG=$(($NOPKG + 1 ))
+                dnf > /dev/null 2>&1
+                if [ "$?" != "127" -a "$?" = 0 ] ; then
+                    RedHatUpdate DNF
+                    DNF_USED_ONCE=true
+                    CHECK_PKG=false
+                else
+                    NOPKG=$(($NOPKG + 1 ))
+                fi
             fi
             rpm-ostree > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "1" ] ; then
-                OstreeUpdate
+                RedHatUpdate RPM-OSTREE
                 CHECK_PKG=false
             else
                 NOPKG=$(( $NOPKG + 1 ))
@@ -389,17 +432,17 @@ CheckPkgAuto () {
         else
             printf "\t\e[1mSkipping Official Package managers...\e[0m\n\n"
         fi
-        if [ "$NOPKG" = "20" ] ; then
+        if [ "$NOPKG" = "23" ] ; then
             printf "\t\e[1mNO KNOWN PACKAGE MANAGERS DETECTED AT ALL!!!\e[0m\n\n"
             CHECK_PKG=false
-        elif [ "$NOPKG" = "13" -a "$BREWFLAG" = true ] ; then
+        elif [ "$NOPKG" = "14" -a "$BREWFLAG" = true ] ; then
             printf "\t\e[1mNO OFFICIAL PACKAGE MANAGERS DETECTED, BREW UPDATED...\e[0m\n"
             printf "Using MacOS?\n\n"
             CHECK_PKG=false
-        elif [ "$NOPKG" = "13" ] ; then
+        elif [ "$NOPKG" = "14" ] ; then
             printf "\t\e[1mNO KNOWN NATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
             CHECK_PKG=false
-        elif [ "$NOPKG" = "7" ] ; then
+        elif [ "$NOPKG" = "9" ] ; then
             printf "\t\e[1mNO KNOWN ALTERNATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
             CHECK_PKG=false
         fi
@@ -1036,6 +1079,7 @@ DISABLEALT=false
 ALTONLY=false
 DISABLEALT=false
 APT_UPGRADE="dist-upgrade"
+SUSE_UPGRADE="dist-upgrade"
 # |-- For checking root permission
 NOROOT=0
 # |- Prepares in case of --save-statistics function
