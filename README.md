@@ -70,6 +70,7 @@ The following are **NOT supported**:
 > - apt-get  (Advanced Package Manager)     [Debian]
 > - dnf      (Dandified YUM)                [Red Hat]
 > - yum      (Yellow Dog Updator, Modified) [Red Hat]
+> - rpm-ostree (RPM-Ostree)                 [Red Hat]
 > - pacman   (pacman)                       [Arch]
 > - apk      (Alpine Linux Package Keeper)  [Alpine Linux]
 > - Zypper   (Zypper)                       [OpenSUSE]
