@@ -7,6 +7,7 @@ This simple script can be used for standard home users, power users with home la
 ---
 
 ### To quickly try it out without installing, use
+(Not compatible with **KSH**)
 #### `$SHELL <(curl https://raw.githubusercontent.com/mportizlunyov/update_full-unix/main/update_full-unix.sh) [ARGUMENTS]`
 
 ---
