@@ -1,7 +1,7 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.3.3
-# Updated: May 28th 2023
+# Version 1.4.3 (June 6th, 2023)
+#
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
@@ -13,6 +13,44 @@
 ExitStatement () {
     printf "\tI hope this program was useful for you!\n\n"
     printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+}
+
+# Checks if checksums match the github repository
+ChecksumCheck () {
+    # Extract checksums from latest checksum repo
+    CHECKSUM_TEST_SHA512=$(curl -s "https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/latest/update_full-unix-$SHORT_VERSION_NUM.sha512sum")
+    ( echo "$CHECKSUM_TEST_SHA512" ) > ./tempfile_SHA512
+    CHECKSUM_TEST_SHA256=$(curl -s "https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/latest/update_full-unix-$SHORT_VERSION_NUM.sha256sum")
+    ( echo "$CHECKSUM_TEST_SHA256" ) > ./tempfile_SHA256
+    # Save script's actual sha256 and sha512 checksums
+    ( echo "$(sha512sum $0)" ) > ./tempfile_ACTUAL512
+    ( echo "$(sha256sum $0)" ) > ./tempfile_ACTUAL256
+    # Checks if the checksums match
+    if [ "$(sha256sum $0)" = "$CHECKSUM_TEST_SHA256" ] && [ "$(sha512sum $0)" = "$CHECKSUM_TEST_SHA512" ] ; then
+        printf "Script matches checksum, likely safe!\n"
+    else
+        printf "\n\e[1m###########################################################\n!!! SCRIPT DOES NOT MATCH LATEST CHECKSUMS, SEE WARNING !!!\n###########################################################\e[0m\n\n"
+        ( echo "$(pwd)/$0" ) > ./tempfile_SCRIPTRAN
+        ( echo "$HOME/0_Update_Full-UNIX-WARNING_0.txt" ) > ./tempfile_WARNING
+        # Remove unused tempfiles
+        $ROOTUSE $SHELL -c '( printf "\nThe Update_Full script [$(cat ./tempfile_SCRIPTRAN)] does not match the latest checksums\n\n\t$(date)\n\nLatest sha512: [$(cat ./tempfile_SHA512)]\nActual sha512: [$(cat ./tempfile_ACTUAL512)]\n\nLatest sha256: [$(cat ./tempfile_SHA256)]\nActual sha256: [$(cat ./tempfile_ACTUAL256)]\n\n\tAsk your SysAdmin to remove this warning if everything is normal\n\n" ) > $(cat ./tempfile_WARNING)'
+        $ROOTUSE rm ./tempfile_SCRIPTRAN > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_WARNING > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_SHA512 > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_SHA256 > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_ACTUAL512 > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_ACTUAL256 > /dev/null 2>&1
+        # Checks for -oc / --override-checksum argument
+        if [ "$(echo "$ALLARGS" | grep -o "\-oc")" != "" ] || [ "$(echo "$ALLARGS" | grep -o "\-\-override-checksum")" != "" ] ; then
+	        RISKYOPERATION=true
+            printf "\e[1m\t   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   \n\t!!!-oc / --override-checksum argument detected, ACCEPTING RISK!!!\n\t   ___________________________________________________________\e[0m\n\n"
+        else
+            RISKYOPERATION=true
+            printf "\e[1mStopping operations, check for updates at \n\t\e[3mhttps://github.com/mportizlunyov/update_full-unix\n\thttps://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\e[0m\n"
+            ExitStatement
+            exit 1
+        fi
+    fi
 }
 
 # Tests network connectivity using PING
@@ -69,6 +107,7 @@ RedHatUpdate (){
         "RPM-OSTREE")
             OSTREEFLAG=true
             printf "\t\e[1m RED HAT ($1) detected\e[0m\n\n"
+            rpm-ostree cancel
             rpm-ostree upgrade --check
             rpm-ostree upgrade
             ;;
@@ -145,15 +184,10 @@ ZypperUpdate () {
     ZYPPERFLAG=true
     printf "\t\e[1mOpenSUSE LINUX detected\e[0m\n\n"
     $ROOTUSE zypper list-updates
-    echo "#### 1 ####"
     $ROOTUSE zypper patch-check
-    echo "#### 2 ####"
     $ROOTUSE zypper $SUSE_UPGRADE $MANQ
-    echo "#### 3 ####"
     $ROOTUSE zypper patch $MANQ
-    echo "#### 4 ####"
     $ROOTUSE zypper purge-kernels
-    echo "#### 5 ####"
 }
 
 # For Nix OS Linux
@@ -233,9 +267,9 @@ YarnUpdate () {
 }
 
 # For Pip and subsequent Versions
-PipUpdate () {
+PipxUpdate () {
     PIPFLAG=true
-    printf "\t\e[1mPIP detected\e[0m\n\n"
+    printf "\t\e[1mPIPx detected\e[0m\n\n"
     # Will Make version for pip3 and pip2 (for legacy support), Pipx for now
     pipx upgrade-all
 }
@@ -292,7 +326,7 @@ CheckPkgAuto () {
             fi
             pipx > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "1" ] ; then
-                PipUpdate
+                PipxUpdate
             else
                 NOPKG=$(( $NOPKG + 1 ))
             fi
@@ -457,6 +491,8 @@ CheckPkgAuto () {
     printf "This script uses three types of arguments: \e[1mFunctional (changes how the script works)\e[0m, \e[1mModifiers (modifies aspects of a functional argument)\e[0m, and \e[1mDescriptive (gives information about the script)\e[0m.\n"
     # Begin Functional arguments
     printf "\nFunctional arguments:\n"
+    printf "\e[1m--override-checksum / -oc\e[0m\t Overrides any warning of mis-matching latest checksums\n"
+    printf "\t!!! Dangerous, could mean OUTDATED or otherwise MODIFIED script (INTENTIONALLY or MALICIOUSLY) !!!\n"
     printf "\e[1m--no-test / -nt\e[0m\t Disable ping testing\n"
     printf "\t*Not compatible with \e[1m-cd\e[0m\n"
     printf "\e[1m--custom-domain / -cd\e[0m\t Use a custom domain (manual input by default)\n"
@@ -537,27 +573,26 @@ SaveStatsComments () {
         COMMENTINPUT=""
         # Loops until user types in 'esc'
         until [ "$COMMENTINPUT" = "~esc~" ] ; do
-            ( echo "$COMMENTINPUT" ) >> ./tempfile || {
-                # In case user deletes tempfile while writing comments
-                tempfileISSUEFLAG=true
-                break
-            }
+            ( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
             printf "TYPE: "
             read COMMENTINPUT
         done
         printf "= = =\n\e[0m"
         if [ "tempfileISSUEFLAG" = true ] ; then
             LOGCOMMENTS="tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED"
+            ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
         else
-            LOGCOMMENTS="$(sed '1d' ./tempfile)"
+            LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
+            ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
             if [ "$LOGCOMMENTS" = "" ] ; then
                 LOGCOMMENTS="*No comments by user*"
+                ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
             fi
-            rm ./tempfile
         fi
-        ( echo "User-Generated Comments: = =" && echo "$LOGCOMMENTS" && echo "= = = = = = = = = =" ) >> $LOGFILEPATH/uf-unix-log.txt
+        $ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
+        $ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
     else
-        ( echo "!= = NO COMMENTS = =!" ) >> $LOGFILEPATH/uf-unix-log.txt
+        $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
     fi
 }
 
@@ -565,88 +600,134 @@ SaveStatsComments () {
 SaveStatsPkgLog () {
     # Begins to prepare adding the used package managers in log
     OFFICIALPKGMAN="No official package managers used"
+    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     ALTPKGMAN="No alternative package managers used"
+    ( echo "$ALTPKGMAN" ) > ./tempfile_ALTPKG
     STATUSFLATPAK="NOT USED"
+    ( echo "$STATUSFLATPAK" ) > ./tempfile_FLATPAK
     STATUSSNAP="NOT USED"
+    ( echo "$STATUSSNAP" ) > ./tempfile_SNAP
     STATUSPORTSNAP="NOT USED"
+    ( echo "$STATUSPORTSNAP" ) > ./tempfile_PORTSNAP
     STATUSBREW="NOT USED"
+    ( echo "$STATUSBREW" ) > ./tempfile_BREW
     STATUSGEM="NOT USED"
+    ( echo "$STATUSGEM" ) > ./tempfile_GEM
     STATUSYARN="NOT USED"
+    ( echo "$STATUSYARN" ) > ./tempfile_YARN
     STATUSNPM="NOT USED"
+    ( echo "$STATUSNPM" ) > ./tempfile_NPM
+    STATUSPIP="NOT USED"
+    ( echo "$STATUSPIP" ) > ./tempfile_PIP
     # For official Package Managers
     if [ "$APTFLAG" = true ] ; then
         OFFICIALPKGMAN="APT package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$PACMANFLAG" = true ] ; then
         OFFICIALPKGMAN="PACMAN package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$DNFFLAG" = true ] ; then
         OFFICIALPKGMAN="DNF package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$YUMFLAG" = true ] ; then
         OFFICIALPKGMAN="YUM package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$SWUPDFLAG" = true ] ; then
         OFFICIALPKGMAN="SWUPD package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$APKFLAG" = true ] ; then
         OFFICIALPKGMAN="APK package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$PACMANFLAG" = true ] ; then
         OFFICIALPKGMAN="PACMAN package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$ZYPPERFLAG" = true ] ; then
         OFFICIALPKGMAN="ZYPPER package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$NIXFLAG" = true ] ; then
         OFFICIALPKGMAN="NIX package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$PKGFLAG" = true ] ; then
         OFFICIALPKGMAN="PKG package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$PKG_ADDFLAG" = true ] ; then
         OFFICIALPKGMAN="PKG_ADD package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$XBPSFLAG" = true ] ; then
         OFFICIALPKGMAN="XBPS package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$SLACKFLAG" = true ] ; then
         OFFICIALPKGMAN="Slackware package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$EOPKGFLAG" = true ] ; then
         OFFICIALPKGMAN="Eopkg package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$OSTREEFLAG=" = true ] ; then
         OFFICIALPKGMAN="RPM-Ostree package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     fi
     # Changes variable ALTPKGMAN as nessesary
     if [ "$FLATPAKFLAG" = true -o "$SNAPFLAG" = true -o "$PORTSNAPFLAG" = true -o "$BREWFLAG" = true -o "$GEMFLAG" = true -o "$YARNFLAG" = true -o "$NPMFLAG" = true -o "$PIPFLAG" = true ] ; then
         ALTPKGMAN="Alternative package managers used"
+        ( echo "$ALTPKGMAN" ) > ./tempfile_ALTPKG
     fi
     # For alternative package managers
     if [ "$FLATPAKFLAG" = true ] ; then
         STATUSFLATPAK="USED"
+        ( echo "$STATUSFLATPAK" ) > ./tempfile_FLATPAK
         FLATPAKFLAG=false
     fi
     if [ "$SNAPFLAG" = true ] ; then
         STATUSSNAP="USED"
+        ( echo "$STATUSSNAP" ) > ./tempfile_SNAP
         FLATPAKFLAG=false
     fi
     if [ "$PORTSNAPFLAG" = true ] ; then
         STATUSPORTSNAPSNAP="USED"
+        ( echo "$STATUSPORTSNAP" ) > ./tempfile_PORTSNAP
         PORTSNAPFLAG=false
     fi
     if [ "$BREWFLAG" = true ] ; then
         STATUSBREW="USED"
+        ( echo "$STATUSBREW" ) > ./tempfile_BREW
         BREWFLAG=false
     fi
     if [ "$GEMFLAG" = true ] ; then
         STATUSGEM="USED"
+        ( echo "$STATUSGEM" ) > ./tempfile_GEM
         GEMFLAG=false
     fi
     if [ "$YARNFLAG" = true ] ; then
         STATUSYARN="USED"
+        ( echo "$STATUSYARN" ) > ./tempfile_YARN
         YARNFLAG=false
     fi
     if [ "$NPMFLAG" = true ] ; then
         STATUSNPM="USED"
+        ( echo "$STATUSNPM" ) > ./tempfile_NPM
         NPMFLAG=false
     fi
     if [ "$PIPFLAG" = true ] ; then
         STATUSPIP="USED"
+        ( echo "$STATUSPIP" ) > ./tempfile_PIP
         PIPFLAG=false
     fi
     # Changes logfile depending on if 
     if [ "$OFFICIALPKGMAN" = "No official package managers used" -a "$ALTPKGMAN" = "No alternative package managers used" ] ; then
-        ( echo "No package managers at all detected!" ) >> ./uf-unix-log.txt
+        $ROOTUSE $SHELL -c '( echo "No package managers at all detected!" ) >> $(cat ./tempfile_LOGFILEPATH)'
     else
-        ( echo "$OFFICIALPKGMAN" && printf "$ALTPKGMAN\n FLATPAK:  $STATUSFLATPAK\n SNAP:     $STATUSSNAP\n PORTSNAP: $STATUSPORTSNAP\n BREW:     $STATUSBREW\n GEM:      $STATUSGEM\n NPM:      $STATUSNPM\n PIP:      $STATUSPIP\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+        $ROOTUSE $SHELL -c '( echo "$(cat ./tempfile_OFFICIALPKG)" && printf "$(cat ./tempfile_ALTPKG)\n FLATPAK:  $(cat ./tempfile_FLATPAK)\n SNAP:     $(cat ./tempfile_SNAP)\n PORTSNAP: $(cat ./tempfile_PORTSNAP)\n BREW:     $(cat ./tempfile_BREW)\n GEM:      $(cat ./tempfile_GEM)\n NPM:      $(cat ./tempfile_NPM)\n PIP:      $(cat ./tempfile_PIP)\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+        # Removes unneeded tempfiles
+        $ROOTUSE rm ./tempfile_OFFICIALPKG > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_ALTPKG > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_FLATPAK > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_SNAP > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_PORTSNAP > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_BREW > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_GEM > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_YARN > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_NPM > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_PIP > /dev/null 2>&1
     fi
 }
 
@@ -655,59 +736,73 @@ SaveStats () {
     if [ "$LOG_DIR_PATH" != "" ] ; then
         LOGFILEPATH="$LOG_DIR_PATH"
     else
-        LOGFILEPATH="$($ROOTUSE find $(pwd) -type d -name "update_full-unix")"
+        #LOGFILEPATH="$($ROOTUSE find $(pwd) -type d -name "update_full-unix")"
+        LOGFILEPATH="$(pwd $0)"
     fi
-    # Checks if save stat is enabled
+    #LOG_FILE="$LOGFILEPATH/uf-unix-log.txt"
+    ( echo "$LOGFILEPATH/uf-unix-log.txt" ) > ./tempfile_LOGFILEPATH
+    # Checks if save-stat is enabled
     if [ "$SAVECONFIRM" = true ] ; then
         # Ends counting time
         TIMEEND=$(date +%s)
         TIMETOTAL=$(( $TIMEEND - $TIMEBEGIN ))
-        # If no root detected
-        if [ "$SAVESTATSNOROOT" = true ] ; then
-            DESCNOROOT="Root missing, check user permissions"
-            ( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $TIMETOTAL sec.\n\n$DESCNOROOT\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
-            SaveStatsComments
-            ( printf "Version $VERSION_NUM\n--- Exit 1 ---/\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
-            # Ending phrase
-            printf "Log Saved...\nAll done!\n"
-            ExitStatement
-            exit 1
+        ( echo "$TIMETOTAL" ) > ./tempfile_TIME
         # If ping scan fails
-        elif [ "$SAVESTATSNOPING" = true ] ; then
+        if [ "$SAVESTATSNOPING" = "true" ] ; then
             DESCNOPING="Ping test failed, check domain ($PING_TARGET)"
-            ( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $TIMETOTAL sec.\n\n$DESCNOPING\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            ( echo "$DESCNOPING" ) > ./tempfile_DESCNOPING
+            $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat tempfile_DESCNOPING))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            ( printf "Version $VERSION_NUM\n--- Exit 1 ---/\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            # Remove leftover tempfiles
+            $ROOTUSE rm ./tempfile_DESCNOPING > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
             printf "Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
         # If duplicate arguments are detcted
-        elif [ "$SAVESTATDUPARGS" = true ] ; then
+        elif [ "$SAVESTATDUPARGS" = "true" ] ; then
             DESCDUPARGS="Duplicate arguments detected"
-            ( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $TIMETOTAL sec.\n\n$DESCDUPARGS\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            ( echo "$DESCDUPARGS" ) > ./tempfile_DESCDUPARGS
+            $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCDUPARGS))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            ( printf "Version $VERSION_NUM\n--- Exit 1 ---/\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            # Remove leftover tempfiles
+            $ROOTUSE rm ./tempfile_DESCDUPARGS > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
             printf "Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
         # If too many arguments are detected
-        elif [ "$SAVESTATTOOMANYARGS" = true ] ; then
+        elif [ "$SAVESTATTOOMANYARGS" = "true" ] ; then
             DESCTOOMANYARGS="Too many arguments detected"
-            ( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $TIMETOTAL sec.\n\n$DESCTOOMANYARGS\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            ( echo "$DESCTOOMANYARGS" ) > ./tempfile_DESCTOOMANYARGS
+            $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCTOOMANYARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            ( printf "Version $VERSION_NUM\n--- Exit 1 ---/\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            # Remove leftover tempfiles
+            $ROOTUSE rm ./tempfile_DESCTOOMANYARGS > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
             printf "Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
         # If two or more incompatible functional arguments are detected
-        elif [ "$SAVESTATINCOMPARGS" = true ] ; then
+        elif [ "$SAVESTATINCOMPARGS" = "true" ] ; then
             DESCINCOPARGS="Incompatible arguments detected($INCOMPARGS_DETAIL)"
-            ( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $TIMETOTAL sec.\n\n$DESCINCOPARGS\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            ( echo "$DESCINCOPARGS" ) > ./tempfile_DESCINCOPARGS
+            $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCINCOPARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            ( printf "Version $VERSION_NUM\n--- Exit 1 ---/\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            # Remove leftover tempfiles
+            $ROOTUSE rm ./tempfile_DESCINCOPARGS > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
             printf "Log Saved...\nAll done!\n"
             ExitStatement
@@ -715,20 +810,27 @@ SaveStats () {
         # If everything else worked normally#elif [ "$SAVESTATSNOROOT" = false -a "$SAVESTATSNOPING" = false -a "$SAVESTATDUPARGS" = false -a "$SAVESTATTOOMANYARGS" = false -a "$SAVESTATINCOMPARGS" = false ] ; then
         else
             #SaveStatsPkgLog
-            ( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $TIMETOTAL sec.\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsPkgLog
             SaveStatsComments
-            ( printf "Version $VERSION_NUM\n--- Exit 0 ---/\n\n" ) >> $LOGFILEPATH/uf-unix-log.txt
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            # Remove leftover tempfiles
+            $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+            $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
             printf "Log Saved...\nAll done!\n"
             ExitStatement
             exit 0
         fi
     else
+        # Remove leftover tempfiles
+        $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
         echo "All done!"
         ExitStatement
         exit 0
     fi
+    
 }
 
 # Action Flag Function
@@ -789,6 +891,9 @@ ActionFlag () {
                 "help" | "h")
                     HELP=true
                     ;;
+                "override-checksum" | "oc")
+                    RISKYOPERATION=true
+                    ;;
                 *)
                     echo "ARGUMENT NOT RECOGNISED!! (001)"
                     printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
@@ -796,7 +901,7 @@ ActionFlag () {
                     ;;
             esac
             ;;
-        ":"*"")
+        ":"*)
             ARG_MOD=$1
             ARG_MOD="$(echo "$ARG_MOD" | cut -c "2-")"
             case $MAIN_ARG in
@@ -834,6 +939,7 @@ ActionFlag () {
         *)
             echo "ARGUMENT NOT RECOGNISED!! (003)"
             printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
+            echo $1
             exit 1
             ;;
     esac
@@ -843,7 +949,7 @@ ActionFlag () {
 ActionPrep () {
     # Seperates between descriptive and functional arguments
     # Descriptive arguments below:
-    if [ "$CONDITIONS" = "true" -o "$PRIVACYPOLICY" = "true" -o "$WARRANTY" = "true" -o "$HELP" = "true" ] ; then
+    if [ "$CONDITIONS" = "true" ] || [ "$PRIVACYPOLICY" = "true" ] || [ "$WARRANTY" = "true" ] || [ "$HELP" = "true" ] ; then
         if [ "$HELP" = "true" ] ; then
             HelpMessage
         fi
@@ -861,7 +967,7 @@ ActionPrep () {
     else
         # Functional argument ERRORS
         # Error if all arguments are attempted
-        if [ "$SAVECONFIRM" = "true" -a "$TEST_CONNECTION" = "false" -a "$CUSTOM_DOMAIN" = "true" -a "$MANUAL_ALL" = "true" -a "$DISABLEALT" = "true" -a "$YUM_UPDATE" = "true" -a "$ALTONLY" = "true" ] ; then
+        if [ "$SAVECONFIRM" = "true" ] && [ "$TEST_CONNECTION" = "false" ] && [ "$CUSTOM_DOMAIN" = "true" ] && [ "$MANUAL_ALL" = "true" ] && [ "$DISABLEALT" = "true" ] && [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
             echo "All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
             echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = true ] ; then
@@ -873,7 +979,7 @@ ActionPrep () {
             fi
         fi
         # Error for mixed -ao/--alternate-only and -dam/--disable-alt-managers
-        if [ "$DISABLEALT" = "true" -a "$ALTONLY" = "true" ] ; then
+        if [ "$DISABLEALT" = "true" ] && [ "$ALTONLY" = "true" ] ; then
             echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = true ] ; then
                 SAVESTATINCOMPARGS=true
@@ -884,7 +990,7 @@ ActionPrep () {
             fi
         fi
         # Error for mixed -yu/--yum-update and -ao/--alt-only
-        if [ "$YUM_UPDATE" = "true" -a "$ALTONLY" = "true" ] ; then
+        if [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
         echo "Invalid argument combination (likely -ao/--alt-only and -yu/--yum-update). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = true ] ; then
                 SAVESTATINCOMPARGS=true
@@ -895,7 +1001,7 @@ ActionPrep () {
             fi
         fi
         # Error for mixed -nt/--no-test and -cd/--custom-domain
-        if [ "$CUSTOM_DOMAIN" = "true" -a "$TEST_CONNECTION" = "false" ] ; then
+        if [ "$CUSTOM_DOMAIN" = "true" ] && [ "$TEST_CONNECTION" = "false" ] ; then
             echo "Invalid argument combination (likely -nt/--no-test and -cd/--custom-domain). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = true ] ; then
                 SAVESTATINCOMPARGS=true
@@ -906,7 +1012,7 @@ ActionPrep () {
             fi
         fi
         # Error for mixed -ss/--save-statistics and -clp/--custom-log-path
-        if [ "$SAVECONFIRM" = "false" -a "$CUSTOMLOGPATH" = "true" ] ; then
+        if [ "$SAVECONFIRM" = "false" ] && [ "$CUSTOMLOGPATH" = "true" ] ; then
             echo "Missing partner argument (likely --save-statistics / -ss). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = true ] ; then
                 SAVESTATINCOMPARGS=true
@@ -1002,12 +1108,12 @@ ActionPrep () {
                         ;;
                 esac
             done
-            if [ "$CUSTOMLOGPATH" = "true" -a "$PRE_CLP" != "true" ] ; then
+            if [ "$CUSTOMLOGPATH" = "true" ] && [ "$PRE_CLP" != "true" ] ; then
                 printf "Type custom log path: < "
                 read LOG_DIR_PATH
                 DESC_CLP=" using custom log PATH ($LOG_DIR_PATH)"
             fi
-            if [ "$CUSTOM_DOMAIN" = "true" -a "$PRE_CD" != "true" ] ; then
+            if [ "$CUSTOM_DOMAIN" = "true" ] && [ "$PRE_CD" != "true" ] ; then
                 printf "Type domain: < "
                 read PING_TARGET
             fi
@@ -1015,7 +1121,7 @@ ActionPrep () {
         fi
         # Custom Log PATH
         if [ "$CUSTOMLOGPATH" = "true" ] ; then
-            if [ "$PRE_CLP" != "true" -a "$MANUAL_ALL" = "false" ] ; then
+            if [ "$PRE_CLP" != "true" ] && [ "$MANUAL_ALL" = "false" ] ; then
                 printf "Type custom log path: < "
                 read LOG_DIR_PATH
             fi
@@ -1030,13 +1136,19 @@ ActionPrep () {
             elif [ "$CUSTOM_DOMAIN" = "true" ] ; then
                 if [ "$PRE_CD" = "true" ] ; then
                     PING_TARGET=$PRELOADED_CUSTOM_DOMAIN
-                elif [ "$PRE_CD" != "true" -a "$MANUAL_ALL" = "false" ] ; then
+                elif [ "$PRE_CD" != "true" ] && [ "$MANUAL_ALL" = "false" ] ; then
                     printf "Type domain: < "
                     read PING_TARGET
                 fi
                 DESC_CD=" using custom domain($PING_TARGET)"
                 NetworkTest
             fi
+        fi
+    fi
+    if [ "$LOG_DIR_PATH" != "" ] ; then
+        if [ ! -d "$LOG_DIR_PATH"  ] ; then
+            printf "LOG-FILE PATH DOES NOT EXIST\n"
+            exit 1
         fi
     fi
 }
@@ -1068,8 +1180,11 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-VERSION_NUM="1.3.2 (April 17th 2023)"
+FULL_VERSION_NUM="1.4.3 (June 6th 2023)"
+SHORT_VERSION_NUM="1.4.3"
 # Sets up initial variables
+RISKYOPERATION=false
+ALLARGS=$@
 MANUAL_ALL=false
 MANQ="-y"
 SAVECONFIRM=false
@@ -1082,7 +1197,8 @@ APT_UPGRADE="dist-upgrade"
 SUSE_UPGRADE="dist-upgrade"
 # |-- For checking root permission
 NOROOT=0
-# |- Prepares in case of --save-statistics function
+# |-- For argument counting.
+ARG_COUNT=1
 # |-- For event of no root
 SAVESTATSNOROOT=false
 # |-- For event of failed ping
@@ -1110,7 +1226,7 @@ if [ "$(whoami)" != "root" ] ; then
         NOSUDO=true
     fi
     doas > /dev/null 2>&1
-    if [ "$?" != 127 -a "$?" = 1  ] ; then
+    if [ "$?" != 127 ] && [ "$?" = 1  ] ; then
         if [ -n "$(groups $(whoami) | grep "wheel")" ] ; then
             printf "\t\e[3mUser $(whoami) has doas permissions, continuing...\e[0m\n"
             ROOTUSE="doas"
@@ -1125,22 +1241,22 @@ if [ "$(whoami)" != "root" ] ; then
         NODOAS=true
     fi
     RUNPROMPT=false
-    if [ "$NOSUDO" = true -a "$NODOAS" = true ] ; then
+    if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
         printf "\t\e[3;5mNeither sudo nor doas detected!\e[0m\n"
         if [ "$SAVECONFIRM" = true ] ; then
             SAVESTATSNOROOT=true
-            DESC_ROOT="Nether sudo nor doas detected by the script."
             SaveStats
         else
+            printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
             exit 1
         fi
     elif [ "$NOROOT" = "2" ] ; then
         printf "\t\e[3;5mUser $(whoami) has no root privileges!\e[0m\n"
         if [ "$SAVECONFIRM" = true ] ; then
             SAVESTATSNOROOT=true
-            DESC_ROOT="User $(whomami) had no root priviledges."
             SaveStats
         else
+            printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
             exit 1
         fi
     fi
@@ -1148,108 +1264,21 @@ else
     printf "\tScript is run as root\n"
     ROOTUSE=""
 fi
+# Runs Checksum Checker
+ChecksumCheck
 # Collect arguments
-if [ "$1" != "" ] ; then
+while [ "$#" -gt 0 ]; do
     ActionFlag $1
-    if [ "$2" != "" ] ; then
-        # Check for duplicates
-        if [ "$2" = "$1" ] ; then
-            DupArgs
-        else
-            PREVARG=$1
-            ActionFlag $2
-            if [ "$3" != "" ] ; then
-                if [ "$3" = "$2" -o "$3" = "$1" ] ; then
-                    DupArgs
-                else
-                    PREV2ARG=$1
-                    PREVARG=$2
-                    ActionFlag $3
-                    if [ "$4" != "" ] ; then
-                        if [ "$4" = "$3" -o "$4" = "$2" -o "$4" = "$1" ] ; then
-                            DupArgs
-                        else
-                            PREV2ARG=$2
-                            PREVARG=$3
-                            ActionFlag $4
-                            if [ "$5" != "" ] ; then
-                                if [ "$5" = "$4" -o "$5" = "$3" -o "$5" = "$2" -o "$5" = "$1" ] ; then
-                                    DupArgs
-                                else
-                                    PREV2ARG=$3
-                                    PREVARG=$4
-                                    ActionFlag $5
-                                    if [ "$6" = "$5" -o "$6" = "$4" -o "$6" = "$3" -o "$6" = "$2" -o "$6" = "$1" ] ; then
-                                        DupArgs
-                                    else
-                                        PREV2ARG=$4
-                                        PREVARG=$5
-                                        ActionFlag $6
-                                        if [ "$7" != "" ] ; then
-                                            if [ "$7" = "$6" -o "$7" = "$5" -o "$7" = "$4" -o "$7" = "$3" -o "$7" = "$2" -o "$7" = "$1" ] ; then
-                                                DupArgs
-                                            fi
-                                        else
-                                            PREV2ARG=$5
-                                            PREVARG=$6
-                                            ActionFlag $7
-                                            if [ "$8" != "" ] ; then
-                                                if [ "$8" = "$7" -o "$8" = "$6" -o "$8" = "$5" -o "$8" = "$4" -o "$8" = $3 -o "$8" = "$2" -o "$8" = "$1" ] ; then
-                                                    DupArgs
-                                                fi
-                                            else
-                                                PREV2ARG=$6
-                                                PREVARG=$7
-                                                ActionFlag $8
-                                                if [ "$9" != "" ] ; then
-                                                    if [ "$9" = "$8" -o "$9" = "$7" -o "$9" = "$6" -o "$9" = "$7" -o "$9" = "$6" -o "$9" = "$5" -o "$9" = "$4" -o "$9" = "$3" -o "$9" = "$2" -o "$9" = "$1" ] ; then
-                                                        DupArgs
-                                                    fi
-                                                else
-                                                    PREV2ARG=$7
-                                                    PREVARG=$8
-                                                    ActionFlag $9
-                                                    #if [ "$#" -gt 9 ] ; then
-                                                    #    TooManyArgs
-                                                    #fi
-                                                    if [ "${10}" != "" ] ; then
-                                                        if [ "${10}" = "$9" -o "${10}" = "$8" -o "${10}" = "$7" -o "${10}" = "$6" -o "${10}" = "$5" -o "${10}" = "$4" -o "${10}" = "$3" -o "${10}" = "$2" -o "${10}" = "$1" ] ; then
-                                                            DupArgs
-                                                        fi
-                                                    else
-                                                        PREV2ARG=$8
-                                                        PREVARG=$9
-                                                        ActionFlag ${10}
-                                                        if [ "${11}" != "" ] ; then
-                                                            if [ "${11}" = "${10}" -o "${11}" = "$9" -o "${11}" = "$8" -o "${11}" = "$7" -o "${11}" = "$6" -o "${11}" = "$5" -o "${11}" = "$4" -o "${11}" = "$3" -o "${11}" = "$2" -o "${11}" = "$1" ] ; then
-                                                                DupArgs
-                                                            fi
-                                                        else
-                                                            PREV2ARG=$9
-                                                            PREVARG=${10}
-                                                            ActionFlag ${11}
-                                                            if [ "$#" -gt 11 ] ; then
-                                                                TooManyArgs
-                                                            fi
-                                                        fi
-                                                    fi
-                                                fi
-                                            fi
-                                        fi
-                                    fi
-                                fi
-                            fi
-                        fi
-                    fi
-                fi
-            fi
-        fi
-    fi
+    shift
+done
+# Checks if too many arguments are detected
+if [ "$#" -gt 11 ] ; then
+    TooManyArgs
 fi
 ActionPrep
 # Description
 DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS$DESC_CLP"
-printf "Running \e[4mUpdate_Full [GENERIC UNIX] 1.3.2\e[01;m script\e[1m$DESC_LOG"
+printf "Running \e[4mUpdate_Full [GENERIC UNIX] $SHORT_VERSION_NUM\e[01;m script\e[1m$DESC_LOG"
 printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
 CHECK_PKG=true
