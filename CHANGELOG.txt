@@ -1,3 +1,11 @@
+Release 1.4.3 (June 6th, 2023)
+ = = =
+ - Added Checksum-Checker, which compares the script's SHA512 and SHA256 sums with the official checksum storage.
+ - Re-wrote argument collection section
+ - Rewrote conditional statements for greater POSIX compliance
+ - Fixed bug with comments not being able to be craeted when script is not run as root
+   - Log-file comments can now be created even if the script is not run as root
+
 Release 1.3.3 (May 28th 2023)
  = = =
  - Fixed bug which used DNF and YUM on Red-hat Linux distros
