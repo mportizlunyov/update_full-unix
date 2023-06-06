@@ -21,6 +21,8 @@ This script uses three types of arguments:
 
 #### **Functional arguments:**
 
+ - `--override-checksum` / `-oc` Override any mis-matching checksums warning
+    - **!!! DANGEROUS, CHECK WHAT IS HAPPENING !!!**
  - `--no-test` / `-nt` Disable ping testing
     - *<ins>Not compatible</ins> with `-cd`
  - `--custom-domain` / `-cd` Use a custom domain (manual input by default)
