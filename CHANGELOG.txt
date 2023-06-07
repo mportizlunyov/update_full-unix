@@ -1,3 +1,11 @@
+Release 1.4.4 (June 7th, 2023)
+ = = =
+ - Partially patched issue with Checksum-Checker, reducing false positives for mis-matching checksums when running the script locally
+   - ZSH still provides a false positive, use different shells for now.
+   - Issue at: 
+ - Added extra comments for better readability
+ - Trimmed out redundant and otherwise unused bits
+
 Release 1.4.3 (June 6th, 2023)
  = = =
  - Added Checksum-Checker, which compares the script's SHA512 and SHA256 sums with the official checksum storage.
