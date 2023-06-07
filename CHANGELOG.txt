@@ -2,7 +2,7 @@ Release 1.4.4 (June 7th, 2023)
  = = =
  - Partially patched issue with Checksum-Checker, reducing false positives for mis-matching checksums when running the script locally
    - ZSH still provides a false positive, use different shells for now.
-   - Issue at: 
+   - Issue at: https://github.com/mportizlunyov/update_full-unix/issues/1#issue-1744838635
  - Added extra comments for better readability
  - Trimmed out redundant and otherwise unused bits
 
