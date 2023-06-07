@@ -12,6 +12,7 @@ NOT CURRENTLY WORKING WITH CHECKSUM-CHECKER function!
 #### `$SHELL <(curl https://raw.githubusercontent.com/mportizlunyov/update_full-unix/main/update_full-unix.sh) [ARGUMENTS]`
 
 -->
+There is an issue with using the script with ZSH, details at: https://github.com/mportizlunyov/update_full-unix/issues/1#issue-1744838635
 
 ---
 
