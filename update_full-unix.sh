@@ -1,9 +1,12 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.4.3 (June 6th, 2023)
+# Version 1.4.4 (June 7th, 2023)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
+#
+# ISSUE WITH CHECKSUM-CHECKER with ZSH, SEE ERROR at
+#
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
 # More information about license in readme and bottom.
 # Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
@@ -17,34 +20,46 @@ ExitStatement () {
 
 # Checks if checksums match the github repository
 ChecksumCheck () {
-    # Extract checksums from latest checksum repo
+    # Extract checksums from latest checksum repo, using the raw GitHub content
     CHECKSUM_TEST_SHA512=$(curl -s "https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/latest/update_full-unix-$SHORT_VERSION_NUM.sha512sum")
-    ( echo "$CHECKSUM_TEST_SHA512" ) > ./tempfile_SHA512
+    ( echo "$(echo "$CHECKSUM_TEST_SHA512" | cut -d ' ' -f 1)" ) > ./tempfile_SHA512
     CHECKSUM_TEST_SHA256=$(curl -s "https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/latest/update_full-unix-$SHORT_VERSION_NUM.sha256sum")
-    ( echo "$CHECKSUM_TEST_SHA256" ) > ./tempfile_SHA256
-    # Save script's actual sha256 and sha512 checksums
-    ( echo "$(sha512sum $0)" ) > ./tempfile_ACTUAL512
-    ( echo "$(sha256sum $0)" ) > ./tempfile_ACTUAL256
+    ( echo "$(echo "$CHECKSUM_TEST_SHA256" | cut -d ' ' -f 1)" ) > ./tempfile_SHA256
+    # Save the script's actual sha256 and sha512 checksums and format to only filter the first chunk of text
+    ( echo "$(cat $0 | sha512sum | cut -d ' ' -f 1)" ) > ./tempfile_ACTUAL512
+    ( echo "$(cat $0 | sha256sum | cut -d ' ' -f 1)" ) > ./tempfile_ACTUAL256
     # Checks if the checksums match
-    if [ "$(sha256sum $0)" = "$CHECKSUM_TEST_SHA256" ] && [ "$(sha512sum $0)" = "$CHECKSUM_TEST_SHA512" ] ; then
-        printf "Script matches checksum, likely safe!\n"
+    if [ "$(cat ./tempfile_SHA512)" = "$(cat ./tempfile_ACTUAL512)" ] && [ "$(cat ./tempfile_SHA256)" = "$(cat ./tempfile_ACTUAL256)" ] ; then
+        # If checksums match, continue execution and print message
+        printf "\n\tScript matches checksum, likely safe!\n\n"
+        # If tempfiles can be deleted without root, do so
+        # Otherwise, use sudo or doas
+        { rm ./tempfile_SHA512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA512 > /dev/null 2>&1; }
+        { rm ./tempfile_SHA256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA256 > /dev/null 2>&1; }
+        { rm ./tempfile_ACTUAL512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL512 > /dev/null 2>&1; }
+        { rm ./tempfile_ACTUAL256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL256 > /dev/null 2>&1; }
     else
+        # Else, if the checksums do not match, print this warning
         printf "\n\e[1m###########################################################\n!!! SCRIPT DOES NOT MATCH LATEST CHECKSUMS, SEE WARNING !!!\n###########################################################\e[0m\n\n"
+        # Save the Present-Working-Directory into a tempfile
         ( echo "$(pwd)/$0" ) > ./tempfile_SCRIPTRAN
         ( echo "$HOME/0_Update_Full-UNIX-WARNING_0.txt" ) > ./tempfile_WARNING
-        # Remove unused tempfiles
+        # Place a warning messege, using ROOT privileges, in the user's $HOME directory
         $ROOTUSE $SHELL -c '( printf "\nThe Update_Full script [$(cat ./tempfile_SCRIPTRAN)] does not match the latest checksums\n\n\t$(date)\n\nLatest sha512: [$(cat ./tempfile_SHA512)]\nActual sha512: [$(cat ./tempfile_ACTUAL512)]\n\nLatest sha256: [$(cat ./tempfile_SHA256)]\nActual sha256: [$(cat ./tempfile_ACTUAL256)]\n\n\tAsk your SysAdmin to remove this warning if everything is normal\n\n" ) > $(cat ./tempfile_WARNING)'
-        $ROOTUSE rm ./tempfile_SCRIPTRAN > /dev/null 2>&1
-        $ROOTUSE rm ./tempfile_WARNING > /dev/null 2>&1
-        $ROOTUSE rm ./tempfile_SHA512 > /dev/null 2>&1
-        $ROOTUSE rm ./tempfile_SHA256 > /dev/null 2>&1
-        $ROOTUSE rm ./tempfile_ACTUAL512 > /dev/null 2>&1
-        $ROOTUSE rm ./tempfile_ACTUAL256 > /dev/null 2>&1
+        # Purge tempfiles, similar process as above
+        { rm ./tempfile_SCRIPTRAN > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SCRIPTRAN > /dev/null 2>&1; }
+        { rm ./tempfile_WARNING > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_WARNING > /dev/null 2>&1; }
+        { rm ./tempfile_SHA512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA512 > /dev/null 2>&1; }
+        { rm ./tempfile_SHA256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA256 > /dev/null 2>&1; }
+        { rm ./tempfile_ACTUAL512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL512 > /dev/null 2>&1; }
+        { rm ./tempfile_ACTUAL256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL256 > /dev/null 2>&1; }
         # Checks for -oc / --override-checksum argument
         if [ "$(echo "$ALLARGS" | grep -o "\-oc")" != "" ] || [ "$(echo "$ALLARGS" | grep -o "\-\-override-checksum")" != "" ] ; then
-	        RISKYOPERATION=true
+	        # If argument is present, print the following warning message
+            RISKYOPERATION=true
             printf "\e[1m\t   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   \n\t!!!-oc / --override-checksum argument detected, ACCEPTING RISK!!!\n\t   ___________________________________________________________\e[0m\n\n"
         else
+            # Otherwise, stop operation
             RISKYOPERATION=true
             printf "\e[1mStopping operations, check for updates at \n\t\e[3mhttps://github.com/mportizlunyov/update_full-unix\n\thttps://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\e[0m\n"
             ExitStatement
@@ -57,7 +72,7 @@ ChecksumCheck () {
 NetworkTest () {
     printf "Checking network connectivity using ping ($PING_TARGET):\n=-=-=-=-=\n"
     # Checks internet connectivity using ping
-    # If ping command returns anything except 0, echo error statement and exit script
+    # If ping fails, echo error statement and exit script
     ping -q -c 6 $PING_TARGET || {
         # Bold Font (\e[1m), Black background (\e[40m), Red X (\e[31m)
         printf "\e[1;1m\e[1;40m--\e[1;31mx\e[1;0m\e[1;1m\e[1;40m-->\e[1;0m No Connection, diagnose the problem and relaunch script.\n"
@@ -466,6 +481,7 @@ CheckPkgAuto () {
         else
             printf "\t\e[1mSkipping Official Package managers...\e[0m\n\n"
         fi
+        # Do different actions, depending ont he amount of NOPKG points collected
         if [ "$NOPKG" = "23" ] ; then
             printf "\t\e[1mNO KNOWN PACKAGE MANAGERS DETECTED AT ALL!!!\e[0m\n\n"
             CHECK_PKG=false
@@ -568,6 +584,7 @@ PrivacyPolicyMessage () {
 
 # This function sets up the commenting function in the SaveStats function
 SaveStatsComments () {
+    # Checks if NOCOMMENT variable is true
     if [ "$NOCOMMENT" != "true" ] ; then
         printf "\n\n\e[1mType in the letters \"~esc~\" to exit the comments bar\n= = =\n"
         COMMENTINPUT=""
@@ -762,21 +779,21 @@ SaveStats () {
             printf "Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
-        # If duplicate arguments are detcted
-        elif [ "$SAVESTATDUPARGS" = "true" ] ; then
-            DESCDUPARGS="Duplicate arguments detected"
-            ( echo "$DESCDUPARGS" ) > ./tempfile_DESCDUPARGS
-            $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCDUPARGS))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
-            SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
-            # Remove leftover tempfiles
-            $ROOTUSE rm ./tempfile_DESCDUPARGS > /dev/null 2>&1
-            $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
-            $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
-            # Ending phrase
-            printf "Log Saved...\nAll done!\n"
-            ExitStatement
-            exit 1
+        # If duplicate arguments are detcted (Potentially depreciated?)
+        #elif [ "$SAVESTATDUPARGS" = "true" ] ; then
+        #    DESCDUPARGS="Duplicate arguments detected"
+        #    ( echo "$DESCDUPARGS" ) > ./tempfile_DESCDUPARGS
+        #    $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCDUPARGS))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+        #    SaveStatsComments
+        #    $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+        #    # Remove leftover tempfiles
+        #    $ROOTUSE rm ./tempfile_DESCDUPARGS > /dev/null 2>&1
+        #    $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
+        #    $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
+        #    # Ending phrase
+        #    printf "Log Saved...\nAll done!\n"
+        #    ExitStatement
+        #    exit 1
         # If too many arguments are detected
         elif [ "$SAVESTATTOOMANYARGS" = "true" ] ; then
             DESCTOOMANYARGS="Too many arguments detected"
@@ -807,7 +824,6 @@ SaveStats () {
             printf "Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
-        # If everything else worked normally#elif [ "$SAVESTATSNOROOT" = false -a "$SAVESTATSNOPING" = false -a "$SAVESTATDUPARGS" = false -a "$SAVESTATTOOMANYARGS" = false -a "$SAVESTATINCOMPARGS" = false ] ; then
         else
             #SaveStatsPkgLog
             $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
@@ -1145,24 +1161,26 @@ ActionPrep () {
             fi
         fi
     fi
+    # Check if Log-file PATH exists
     if [ "$LOG_DIR_PATH" != "" ] ; then
         if [ ! -d "$LOG_DIR_PATH"  ] ; then
+            # If not, exit
             printf "LOG-FILE PATH DOES NOT EXIST\n"
             exit 1
         fi
     fi
 }
 
-# Duplicate Argument Function
-DupArgs () {
-    printf "NO DUPLICATE ARGS!!\n"
-    if [ "$SAVECONFIRM" = true ] ; then
-        SAVESTATDUPARGS=true
-        SaveStats
-    else
-        exit 1
-    fi
-}
+# Duplicate Argument Function (Potentially depreciated?)
+#DupArgs () {
+#    printf "NO DUPLICATE ARGS!!\n"
+#    if [ "$SAVECONFIRM" = true ] ; then
+#        SAVESTATDUPARGS=true
+#        SaveStats
+#    else
+#        exit 1
+#    fi
+#}
 
 # Too Many Argument Functions
 TooManyArgs () {
@@ -1180,8 +1198,8 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-FULL_VERSION_NUM="1.4.3 (June 6th 2023)"
-SHORT_VERSION_NUM="1.4.3"
+FULL_VERSION_NUM="1.4.4 (June 7th 2023)"
+SHORT_VERSION_NUM="1.4.4"
 # Sets up initial variables
 RISKYOPERATION=false
 ALLARGS=$@
@@ -1192,30 +1210,26 @@ TEST_CONNECTION=true
 CUSTOM_DOMAIN=false
 DISABLEALT=false
 ALTONLY=false
-DISABLEALT=false
 APT_UPGRADE="dist-upgrade"
 SUSE_UPGRADE="dist-upgrade"
 # |-- For checking root permission
 NOROOT=0
-# |-- For argument counting.
-ARG_COUNT=1
-# |-- For event of no root
-SAVESTATSNOROOT=false
 # |-- For event of failed ping
 SAVESTATSNOPING=false
-# |-- For event of duplicate arguments
-SAVESTATDUPARGS=false
+# |-- For event of duplicate arguments (Potentially depreciated?)
+#SAVESTATDUPARGS=false
 # |-- For event of too many arguments
 SAVESTATTOOMANYARGS=false
 # Checks for root privileges
 if [ "$(whoami)" != "root" ] ; then
+    # Prints status message
     printf "\e[3mScript not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
+    # Test SUDO presence
     sudo > /dev/null 2>&1
     if [ "$?" != 127 -a "$?" = 1 ] ; then
         if [ -n "$(sudo -l | grep "ALL")" ] ; then
             printf "\t\e[3mUser $(whoami) has sudo permissions, continuing...\e[0m\n"
             ROOTUSE="sudo"
-            RUNPROMPT=false
         else
             printf "no sudo priviledges detected...\n"
             NOROOT=$(( $NOROOT + 1 ))
@@ -1225,12 +1239,12 @@ if [ "$(whoami)" != "root" ] ; then
         NOROOT=$(( $NOROOT + 1 ))
         NOSUDO=true
     fi
+    # Test DOAS presence
     doas > /dev/null 2>&1
     if [ "$?" != 127 ] && [ "$?" = 1  ] ; then
         if [ -n "$(groups $(whoami) | grep "wheel")" ] ; then
             printf "\t\e[3mUser $(whoami) has doas permissions, continuing...\e[0m\n"
             ROOTUSE="doas"
-            RUNPROMPT=false
         else
             printf "no doas priviledges detected...\n"
             NOROOT=$(( $NOROOT + 1 ))
@@ -1240,31 +1254,22 @@ if [ "$(whoami)" != "root" ] ; then
         NOROOT=$(( $NOROOT + 1 ))
         NODOAS=true
     fi
-    RUNPROMPT=false
+    # If neither SUDO or DOAS is not present
     if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
         printf "\t\e[3;5mNeither sudo nor doas detected!\e[0m\n"
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATSNOROOT=true
-            SaveStats
-        else
-            printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
-            exit 1
-        fi
+        printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+        exit 1
+    # Redundant?
     elif [ "$NOROOT" = "2" ] ; then
         printf "\t\e[3;5mUser $(whoami) has no root privileges!\e[0m\n"
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATSNOROOT=true
-            SaveStats
-        else
-            printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
-            exit 1
-        fi
+        printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+        exit 1
     fi
 else
     printf "\tScript is run as root\n"
     ROOTUSE=""
 fi
-# Runs Checksum Checker
+# Runs Checksum Checker (Not working with ZSH as of v1.4.4)
 ChecksumCheck
 # Collect arguments
 while [ "$#" -gt 0 ]; do
@@ -1283,6 +1288,7 @@ printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
 CHECK_PKG=true
 CheckPkgAuto
+# Checks if commenting was enabled
 SaveStats
 
 # Update_full-unix.sh  Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
