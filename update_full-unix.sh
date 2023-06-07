@@ -770,7 +770,7 @@ SaveStats () {
             ( echo "$DESCNOPING" ) > ./tempfile_DESCNOPING
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat tempfile_DESCNOPING))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCNOPING > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -800,7 +800,7 @@ SaveStats () {
             ( echo "$DESCTOOMANYARGS" ) > ./tempfile_DESCTOOMANYARGS
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCTOOMANYARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCTOOMANYARGS > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -815,7 +815,7 @@ SaveStats () {
             ( echo "$DESCINCOPARGS" ) > ./tempfile_DESCINCOPARGS
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCINCOPARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCINCOPARGS > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -829,7 +829,7 @@ SaveStats () {
             $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsPkgLog
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.3 (May 28th 2023)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
