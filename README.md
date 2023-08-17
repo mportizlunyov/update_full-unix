@@ -3,16 +3,6 @@
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of Operating Systems through their respective package managers.
 
 This simple script can be used for standard home users, power users with home labs, and even enterprise servers if desired.
-<!--
----
-NOT CURRENTLY WORKING WITH CHECKSUM-CHECKER function!
-
-### To quickly try it out without installing, use
-(Following template does not work on **KSH**)
-#### `$SHELL <(curl https://raw.githubusercontent.com/mportizlunyov/update_full-unix/main/update_full-unix.sh) [ARGUMENTS]`
-
--->
-#### There is an issue with using the script with **ZSH**, details at: (https://github.com/mportizlunyov/update_full-unix/issues/1#issue-1744838635)[https://github.com/mportizlunyov/update_full-unix/issues/1#issue-1744838635]
 
 ---
 
@@ -27,9 +17,7 @@ This script uses three types of arguments:
 
  - `--override-checksum` / `-oc` Override any mis-matching checksums warning
     - **!!! DANGEROUS, CHECK WHAT IS HAPPENING !!!**
- - `--no-test` / `-nt` Disable ping testing
-    - *<ins>Not compatible</ins> with `-cd`
- - `--custom-domain` / `-cd` Use a custom domain (manual input by default)
+ - `--custom-domain` / `-cd` Add a custom domain to test internet connection (manual input by default)
 	- *<ins>Not compatible</ins> with `-nt`
 	- ^_Modifier available_
  - `--yum-update` / `-yu` Use YUM instead of DNF on Red-Hat
