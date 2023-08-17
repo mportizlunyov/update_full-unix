@@ -1,11 +1,10 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.4.4 (June 7th, 2023)
+# Version 1.5.4 (August 17th, 2023)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
 #
-# ISSUE WITH CHECKSUM-CHECKER with ZSH, SEE ERROR at
 #
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
 # More information about license in readme and bottom.
@@ -18,80 +17,115 @@ ExitStatement () {
     printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
 }
 
-# Checks if checksums match the github repository
-ChecksumCheck () {
-    # Extract checksums from latest checksum repo, using the raw GitHub content
-    CHECKSUM_TEST_SHA512=$(curl -s "https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/latest/update_full-unix-$SHORT_VERSION_NUM.sha512sum")
-    ( echo "$(echo "$CHECKSUM_TEST_SHA512" | cut -d ' ' -f 1)" ) > ./tempfile_SHA512
-    CHECKSUM_TEST_SHA256=$(curl -s "https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/latest/update_full-unix-$SHORT_VERSION_NUM.sha256sum")
-    ( echo "$(echo "$CHECKSUM_TEST_SHA256" | cut -d ' ' -f 1)" ) > ./tempfile_SHA256
-    # Save the script's actual sha256 and sha512 checksums and format to only filter the first chunk of text
-    ( echo "$(cat $0 | sha512sum | cut -d ' ' -f 1)" ) > ./tempfile_ACTUAL512
-    ( echo "$(cat $0 | sha256sum | cut -d ' ' -f 1)" ) > ./tempfile_ACTUAL256
-    # Checks if the checksums match
-    if [ "$(cat ./tempfile_SHA512)" = "$(cat ./tempfile_ACTUAL512)" ] && [ "$(cat ./tempfile_SHA256)" = "$(cat ./tempfile_ACTUAL256)" ] ; then
-        # If checksums match, continue execution and print message
-        printf "\n\tScript matches checksum, likely safe!\n\n"
-        # If tempfiles can be deleted without root, do so
-        # Otherwise, use sudo or doas
-        { rm ./tempfile_SHA512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA512 > /dev/null 2>&1; }
-        { rm ./tempfile_SHA256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA256 > /dev/null 2>&1; }
-        { rm ./tempfile_ACTUAL512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL512 > /dev/null 2>&1; }
-        { rm ./tempfile_ACTUAL256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL256 > /dev/null 2>&1; }
+# Checks for CURL/WGET dependency
+DependencyTest () {
+    # Checks for CURL or WGET
+    if [ "$(curl > /dev/null 2>&1)" != "127" ] ; then
+        # CURL is the preferred tool
+        printf "* CURL found, resuming!\n"
+        TOOLUSE="CURL"
+        CURL_INSECURE=false
     else
-        # Else, if the checksums do not match, print this warning
-        printf "\n\e[1m###########################################################\n!!! SCRIPT DOES NOT MATCH LATEST CHECKSUMS, SEE WARNING !!!\n###########################################################\e[0m\n\n"
-        # Save the Present-Working-Directory into a tempfile
-        ( echo "$(pwd)/$0" ) > ./tempfile_SCRIPTRAN
-        ( echo "$HOME/0_Update_Full-UNIX-WARNING_0.txt" ) > ./tempfile_WARNING
-        # Place a warning messege, using ROOT privileges, in the user's $HOME directory
-        $ROOTUSE $SHELL -c '( printf "\nThe Update_Full script [$(cat ./tempfile_SCRIPTRAN)] does not match the latest checksums\n\n\t$(date)\n\nLatest sha512: [$(cat ./tempfile_SHA512)]\nActual sha512: [$(cat ./tempfile_ACTUAL512)]\n\nLatest sha256: [$(cat ./tempfile_SHA256)]\nActual sha256: [$(cat ./tempfile_ACTUAL256)]\n\n\tAsk your SysAdmin to remove this warning if everything is normal\n\n" ) > $(cat ./tempfile_WARNING)'
-        # Purge tempfiles, similar process as above
-        { rm ./tempfile_SCRIPTRAN > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SCRIPTRAN > /dev/null 2>&1; }
-        { rm ./tempfile_WARNING > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_WARNING > /dev/null 2>&1; }
-        { rm ./tempfile_SHA512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA512 > /dev/null 2>&1; }
-        { rm ./tempfile_SHA256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_SHA256 > /dev/null 2>&1; }
-        { rm ./tempfile_ACTUAL512 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL512 > /dev/null 2>&1; }
-        { rm ./tempfile_ACTUAL256 > /dev/null 2>&1; } || { $ROOTUSE rm ./tempfile_ACTUAL256 > /dev/null 2>&1; }
-        # Checks for -oc / --override-checksum argument
-        if [ "$(echo "$ALLARGS" | grep -o "\-oc")" != "" ] || [ "$(echo "$ALLARGS" | grep -o "\-\-override-checksum")" != "" ] ; then
-	        # If argument is present, print the following warning message
-            RISKYOPERATION=true
-            printf "\e[1m\t   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   \n\t!!!-oc / --override-checksum argument detected, ACCEPTING RISK!!!\n\t   ___________________________________________________________\e[0m\n\n"
+        printf "!!CURL missing\n"
+        # Checks for WGET as backup
+        if [ "$(wget > /dev/null 2)" != "127" ] ; then
+            printf "* WGET found, resuming!\n"
+            TOOLUSE="WGET"
         else
-            # Otherwise, stop operation
-            RISKYOPERATION=true
-            printf "\e[1mStopping operations, check for updates at \n\t\e[3mhttps://github.com/mportizlunyov/update_full-unix\n\thttps://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\e[0m\n"
-            ExitStatement
-            exit 1
+            # If neither CURL nor WGET are found, mark for exiting with error later
+            printf "!!Dependency for Checksum-Checker NOT FOUND!!\n"
+            TOOLUSE="MISSING"
         fi
+    fi
+    # Checks for PING
+    if [ "$(ping > /dev/null 2>&1)" != "127" ] ; then
+        printf "* PING is found, resuming!\n"
+    else
+        # If it does not exist, quit
+        printf "!!PING NOT FOUND, QUITting NOW!!\n"
+        exit 1
     fi
 }
 
-# Tests network connectivity using PING
-NetworkTest () {
-    printf "Checking network connectivity using ping ($PING_TARGET):\n=-=-=-=-=\n"
-    # Checks internet connectivity using ping
-    # If ping fails, echo error statement and exit script
-    ping -q -c 6 $PING_TARGET || {
-        # Bold Font (\e[1m), Black background (\e[40m), Red X (\e[31m)
-        printf "\e[1;1m\e[1;40m--\e[1;31mx\e[1;0m\e[1;1m\e[1;40m-->\e[1;0m No Connection, diagnose the problem and relaunch script.\n"
-        if [ "$SAVECONFIRM" = true ] ; then
-            SAVESTATSNOPING=true
-            SaveStats
-        else
+# Extracts the Checksum-Checker and runs it
+ChecksumCheck () {
+    # Decide which tools to use to extract the Checksum-checker
+    case $1 in
+        "CURL")
+            # By default, attempt to use secure CURL requests
+            $ROOTUSE curl --silent --remote-name https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/00_CHECKSUM_CHECKER.sh || {
+                # If it fails, ask to use --insecure option of not
+                while [ "$LOOP_INPUT" = "true" ] ; do
+                    printf "!!CURL did not work, try again with --insecure option?\n!RISKY, check what is going on!\n\n[Y]es/[N]o"
+                    read INSECURE_OPTION
+                    case $INSECURE_OPTION in
+                        "Y"|"y"|"Yes"|"yes")
+                            LOOP_INPUT=false
+                            printf "* Understood, retrying with --insecure option"
+                            CURL_INSECURE=true
+                            $ROOTUSE curl --remote-name --insecure https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/00_CHECKSUM_CHECKER.sh || {
+                                # If CURL fails again
+                                printf "!!CURL failed with --insecure option, quitting. Please diagnose the problem!!\n"
+                                exit 1
+                            }
+                            ;;
+                        "N"|"n"|"No"|"no")
+                            LOOP_INPUT=false
+                            printf "!!Understood, quitting. Please diagnose the problem!!\n"
+                            exit 1
+                            ;;
+                        *)
+                            printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                            ;;
+                    esac
+                done
+            }
+            ;;
+        "WGET")
+            $ROOTUSE wget --quiet https://raw.githubusercontent.com/mportizlunyov/uf-CHECKSUM_STORAGE/main/Update_Full-UNIX/00_CHECKSUM_CHECKER.sh
+            ;;
+    esac
+    $ROOTUSE $SHELL 00_CHECKSUM_CHECKER.sh $SHORT_VERSION_NUM $TOOLUSE $CURL_INSECURE
+    if [ "$?" = "1" ] ; then
+    printf "Checksum-Checker FAILED! Investigate!!\n"
+    case $RISKYOPERATION in
+        "true")
+            printf "!!!Running despite Checksum-Checker FAILING!!!\n"
+            WarrantyMessage
+            ;;
+        *)
+            printf "Check what is going on!\n"
+            $ROOTUSE rm 00_CHECKSUM_CHECKER.sh
             exit 1
-        fi
-    }
-    # Otherwise, continue as usual
-        # Bold Font (\e[1m), Black background (\e[40m), Green + (\e[32m)
-    printf "\e[1;1m\e[1;40m--\e[1;32m+\e[1;0m\e[1;40m-->\e[1;0m Connection to $PING_TARGET successful, beginning update:\n=-=-=-=-=\n"
+            ;;
+        esac
+    fi
+    $ROOTUSE rm 00_CHECKSUM_CHECKER.sh
+}
+
+# Tests internet connectivity using PING
+NetworkTest () {
+    case $1 in
+        "raw.githubusercontent.com")
+            ping -q -c 3 raw.githubusercontent.com || {
+                printf "\e[1;1m\e[1;40m--\e[1;31mx\e[1;0m\e[1;1m\e[1;40m-->\e[1;0m !!No Connection to checksum repository, diagnose the problem and relaunch script.\n"
+                EXIT1=true
+            }
+            ;;
+        *)
+            ping -q -c 3 $PING_TARGET || {
+                printf "* Performing network connectivity test using ($PING_TARGET):\n=-=-=-=-=\n"
+                printf "\e[1;1m\e[1;40m--\e[1;31mx\e[1;0m\e[1;1m\e[1;40m-->\e[1;0m !!No Connection to CUSTOM URL, diagnose the problem and relaunch script in event of failure.\n"
+                EXIT1=true
+            }
+            ;;
+    esac
 }
 
 # For Debian/Ubuntu-based operating systems
 AptUpdate () {
     APTFLAG=true
-    printf "\t\e[1mDEBIAN/UBUNTU detected!\e[0m\n\n"
+    printf "\n\t\e[1mAPT detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE apt-get update
     $ROOTUSE apt-get $APT_UPGRADE $MANQ
     $ROOTUSE apt-get -f install $MANQ
@@ -101,11 +135,12 @@ AptUpdate () {
 
 # For Red-Hat based Linux Operating Systems
 RedHatUpdate (){
+    printf "\n\t\e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n"
     case $1 in
         # For YUM (legacy)
         "YUM")
             YUMFLAG=true
-            printf "\t\e[1mRED HAT ($1) detected\e[0m\n\n"
+            #printf "\t\e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n\n"
             $ROOTUSE yum check-update $MANQ
             $ROOTUSE yum update $MANQ
             $ROOTUSE yum autoremove $MANQ
@@ -113,7 +148,7 @@ RedHatUpdate (){
         # For DNF (modern)
         "DNF")
             DNFFLAG=true
-            printf "\t\e[1mRED HAT ($1) detected\e[0m\n\n"
+            #printf "\t\e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n\n"
             $ROOTUSE dnf check-update $MANQ
             $ROOTUSE dnf update $MANQ
             $ROOTUSE dnf autoremove $MANQ_DEB1
@@ -121,7 +156,7 @@ RedHatUpdate (){
         # For RPM-OSTREE (found in Fedora SilverBlue, Kinoite, and CoreOS)
         "RPM-OSTREE")
             OSTREEFLAG=true
-            printf "\t\e[1m RED HAT ($1) detected\e[0m\n\n"
+            #printf "\t\e[1m RED HAT ($1) detected under $DISTRO_NAME!\e[0m\n\n"
             rpm-ostree cancel
             rpm-ostree upgrade --check
             rpm-ostree upgrade
@@ -135,7 +170,7 @@ SlackpkgUpdate () {
         MANQ="-batch=on -default_answer=y"
     fi
     SLACKFLAG=true
-    printf "\t\e[1mSLACKWARE detected\e[0m\n\n"
+    printf "\n\t\e[1mSLACKWARE detected!\e[0m\n"
     $ROOTUSE slackpkg $MANQ update
     $ROOTUSE slackpkg $MANQ install-new
     $ROOTUSE slackpkg $MANQ upgrade-all
@@ -145,7 +180,7 @@ SlackpkgUpdate () {
 # For Solus Linux-based operating systems
 EopkgUpdate () {
     EOPKGFLAG=true
-    printf "\t\e[1mSOLUS detected\e[0m\n\n"
+    printf "\n\t\e[1mSOLUS detected!\e[0m\n"
     $ROOTUSE eopkg update-repo
     $ROOTUSE eopkg upgrade $MANQ
 }
@@ -153,7 +188,7 @@ EopkgUpdate () {
 # For Flatpaks
 FlatpakUpdate () {
     FLATPAKFLAG=true
-    printf "\t\e[1mFLATPAK detected\e[0m\n\n"
+    printf "\n\t\e[1mFLATPAK detected under $DISTRO_NAME!\e[0m\n"
     flatpak update $MANQ
     flatpak uninstall --unused $MANQ
 }
@@ -161,14 +196,14 @@ FlatpakUpdate () {
 # For Snaps
 SnapUpdate () {
     SNAPFLAG=true
-    printf "\t\e[1mSNAP detected\e[0m\n\n"
+    printf "\n\t\e[1mSNAP detected under $DISTRO_NAME!\e[0m\n"
     snap refresh
 }
 
 # For Clear Linux
 SwupdUpdate () {
     SWUPDFLAG=true
-    printf "\t\e[1mCLEAR LINUX detected\e[0m\n\n"
+    printf "\n\t\e[1mCLEAR LINUX detected!\e[0m\n"
     echo "By default, Clear Linux automatically updates its packages. You may need to disable auto-update."
     $ROOTUSE swupd check-update $MANQ
     $ROOTUSE swupd update $MANQ
@@ -177,7 +212,7 @@ SwupdUpdate () {
 # For Alpine Linux
 ApkUpdate () {
     APKFLAG=true
-    printf "\t\e[1mALPINE LINUX detected\e[0m\n\n"
+    printf "\n\t\e[1mALPINE LINUX detected!\e[0m\n"
     $ROOTUSE apk update
     $ROOTUSE apk upgrade
     $ROOTUSE apk fix
@@ -186,7 +221,7 @@ ApkUpdate () {
 # For Arch Linux
 PacmanUpdate () {
     PACMANFLAG=true
-    printf "\t\e[1mARCH LINUX detected\e[0m\n\n"
+    printf "\n\t\e[1mPACMAN detected under $DISTRO_NAME!\e[0m\n"
     if [ "$MANUAL_ALL" != "true" ] ; then
         yes | $ROOTUSE pacman -Syu
     else
@@ -197,7 +232,7 @@ PacmanUpdate () {
 # For OpenSUSE Linux
 ZypperUpdate () {
     ZYPPERFLAG=true
-    printf "\t\e[1mOpenSUSE LINUX detected\e[0m\n\n"
+    printf "\n\t\e[1mOpenSUSE LINUX detected!\e[0m\n"
     $ROOTUSE zypper list-updates
     $ROOTUSE zypper patch-check
     $ROOTUSE zypper $SUSE_UPGRADE $MANQ
@@ -208,7 +243,7 @@ ZypperUpdate () {
 # For Nix OS Linux
 NixUpdate () {
     NIXFLAG=true
-    printf "\t\e[1mNIX PACKAGE MANAGER detected\e[0m\n\n"
+    printf "\n\t\e[1mNIX PACKAGE MANAGER detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE nix-channel --update
     $ROOTUSE nix-env -u '*'
     $ROOTUSE nix-env --delete-generations old
@@ -218,7 +253,7 @@ NixUpdate () {
 # For FreeBSD-based operating systems
 PkgUpdate () {
     PKGFLAG=true
-    printf "\t\e[1mFREEBSD detected\e[0m\n\n"
+    printf "\n\t\e[1mFREEBSD detected!\e[0m\n"
     $ROOTUSE pkg update
     $ROOTUSE pkg upgrade $MANQ
     $ROOTUSE pkg autoremove $MANQ
@@ -229,7 +264,7 @@ PkgUpdate () {
 # For OpenBSD
 Pkg_addUpdate () {
     PKG_ADDFLAG=true
-    printf "\t\e[1mOPENBSD detected\e[0m\n\n"
+    printf "\n\t\e[1mOPENBSD detected!\e[0m\n"
     $ROOTUSE pkg_add -Uuvm
     $ROOTUSE syspatch
 }
@@ -237,14 +272,14 @@ Pkg_addUpdate () {
 # For Portsnaps
 PortsnapUpdate () {
     PORTSNAPFLAG=true
-    printf "\t\e[1mPORTSNAP detected\e[0m\n\n"
+    printf "\n\t\e[1mPORTSNAP detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE portsnap auto
 }
 
 # For Homebrew
 BrewUpdate () {
     BREWFLAG=true
-    printf "\t\e[1mHOMEBREW detected\e[0m\n\n"
+    printf "\n\t\e[1mHOMEBREW detected under $DISTRO_NAME!!\e[0m\n"
     $ROOTUSE brew update
     $ROOTUSE brew upgrade -v
     $ROOTUSE brew cleanup -v
@@ -253,7 +288,7 @@ BrewUpdate () {
 # For Void Linux
 XbpsUpdate () {
     XBPSFLAG=true
-    printf "\t\e[1mVOID LINUX detected\e[0m\n\n"
+    printf "\n\t\e[1mVOID LINUX detected!\e[0m\n"
     $ROOTUSE xbps-install -u xbps
     $ROOTUSE xbps-install -Su
 }
@@ -261,7 +296,7 @@ XbpsUpdate () {
 # For RubyGems
 GemUpdate () {
     GEMFLAG=true
-    printf "\t\e[1mRUBYGEM detected!\e[0m\n\n"
+    printf "\n\t\e[1mRUBYGEM detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE gem update
     $ROOTUSE gem cleanup
 }
@@ -269,14 +304,14 @@ GemUpdate () {
 # For Node.Js Package Manager
 NpmUpdate () {
     NPMFLAG=true
-    printf "\t\e[1mNODE.JS PACKAGE MANAGER detected!\e[0m\n\n"
+    printf "\n\t\e[1mNODE.JS PACKAGE MANAGER detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE npm update
 }
 
 # For Yarn Package Manager
 YarnUpdate () {
     YARNFLAG=true
-    printf "\t\e[1mYARN detected\e[0m\n\n"
+    printf "\n\t\e[1mYARN detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE yarn upgrade
     $ROOTUSE yarn install
 }
@@ -284,7 +319,7 @@ YarnUpdate () {
 # For Pip and subsequent Versions
 PipxUpdate () {
     PIPFLAG=true
-    printf "\t\e[1mPIPx detected\e[0m\n\n"
+    printf "\n\t\e[1mPIPx detected under $DISTRO_NAME!\e[0m\n"
     # Will Make version for pip3 and pip2 (for legacy support), Pipx for now
     pipx upgrade-all
 }
@@ -292,7 +327,7 @@ PipxUpdate () {
 # For Guix Package Manager
 GuixUpdate() {
     GUIXFLAG=true
-    printf "\t\e[1mGuix detected\e[0m\n\n"
+    printf "\n\t\e[1mGuix detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE guix pull
     $ROOTUSE guix upgrade
 }
@@ -301,70 +336,6 @@ GuixUpdate() {
 CheckPkgAuto () {
     NOPKG=0
     while [ "$CHECK_PKG" = true ] ; do
-        # If disabling alternative package managers is not disabled.
-        if [ "$DISABLEALT" = false ] ; then
-            flatpak > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                FlatpakUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            snap > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                SnapUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            brew > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                BrewUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            portsnap > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                PortsnapUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            gem > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                GemUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            yarn --version > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                YarnUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            pipx > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                PipxUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            nix > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "nixos")" = "" ] ; then
-                NixUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            guix > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "guix")" = "" ] ; then
-                GuixUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
-            if [ "$ALTONLY" = true ] ; then
-                CHECK_PKG=false
-            fi
-        else
-            printf "\t\e[1mSkipping Alternative Package managers...\e[0m\n\n"
-        fi
         if [ "$ALTONLY" = false ] ; then
             if [ "$ALTONLY" = true ] ; then
                 CHECK_PKG=false
@@ -479,21 +450,85 @@ CheckPkgAuto () {
                 NOPKG=$(( $NOPKG + 1 ))
             fi
         else
-            printf "\t\e[1mSkipping Official Package managers...\e[0m\n\n"
+            printf "\t\e[1m* Skipping Official Package managers...\e[0m\n\n"
+        fi
+        # If disabling alternative package managers is not disabled.
+        if [ "$DISABLEALT" = false ] ; then
+            flatpak > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" ] ; then
+                FlatpakUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            snap > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "0" ] ; then
+                SnapUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            brew > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" ] ; then
+                BrewUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            portsnap > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "0" ] ; then
+                PortsnapUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            gem > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" ] ; then
+                GemUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            yarn --version > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "0" ] ; then
+                YarnUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            pipx > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" ] ; then
+                PipxUpdate
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            nix > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "nixos")" = "" ] ; then
+                NixUpdate
+                CHECK_PKG=false
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            guix > /dev/null 2>&1
+            if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "guix")" = "" ] ; then
+                GuixUpdate
+                CHECK_PKG=false
+            else
+                NOPKG=$(( $NOPKG + 1 ))
+            fi
+            if [ "$ALTONLY" = true ] ; then
+                CHECK_PKG=false
+            fi
+        else
+            printf "\t\e[1mSkipping Alternative Package managers...\e[0m\n\n"
         fi
         # Do different actions, depending ont he amount of NOPKG points collected
         if [ "$NOPKG" = "23" ] ; then
-            printf "\t\e[1mNO KNOWN PACKAGE MANAGERS DETECTED AT ALL!!!\e[0m\n\n"
+            printf "\t\e[1m!!NO KNOWN PACKAGE MANAGERS DETECTED AT ALL!!!\e[0m\n\n"
             CHECK_PKG=false
         elif [ "$NOPKG" = "14" -a "$BREWFLAG" = true ] ; then
-            printf "\t\e[1mNO OFFICIAL PACKAGE MANAGERS DETECTED, BREW UPDATED...\e[0m\n"
-            printf "Using MacOS?\n\n"
+            printf "\t\e[1m* NO OFFICIAL PACKAGE MANAGERS DETECTED, BREW UPDATED...\e[0m\n"
+            printf "* Using MacOS?\n\n"
             CHECK_PKG=false
         elif [ "$NOPKG" = "14" ] ; then
-            printf "\t\e[1mNO KNOWN NATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
+            printf "\t\e[1m* NO KNOWN NATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
             CHECK_PKG=false
         elif [ "$NOPKG" = "9" ] ; then
-            printf "\t\e[1mNO KNOWN ALTERNATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
+            printf "\t\e[1m* NO KNOWN ALTERNATIVE PACKAGE MANAGERS DETECTED!\e[0m\n\n"
             CHECK_PKG=false
         fi
     done
@@ -509,10 +544,7 @@ CheckPkgAuto () {
     printf "\nFunctional arguments:\n"
     printf "\e[1m--override-checksum / -oc\e[0m\t Overrides any warning of mis-matching latest checksums\n"
     printf "\t!!! Dangerous, could mean OUTDATED or otherwise MODIFIED script (INTENTIONALLY or MALICIOUSLY) !!!\n"
-    printf "\e[1m--no-test / -nt\e[0m\t Disable ping testing\n"
-    printf "\t*Not compatible with \e[1m-cd\e[0m\n"
     printf "\e[1m--custom-domain / -cd\e[0m\t Use a custom domain (manual input by default)\n"
-    printf "\t*Not compatible with \e[1m-nt\e[0m\n"
     printf "\t^Modifier available\n"
     printf "\e[1m--yum-update / -yu\e[0m\t Use YUM instead of DNF on Red-Hat\n"
     printf "\t*Not compatible with \e[1m-ao\e[0m\n"
@@ -540,7 +572,9 @@ CheckPkgAuto () {
     printf "\e[1m--privacy-policy / -pp\e[0m\t Print Privacy Policy\n"
     # Begin Security Advisories
     printf "\n\nTo prevent tempering, change the PERMISSIONS."
-    printf "\nAdditionally, verify the script using the checksums found at https://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\n\n"
+    printf "\nThis can easily be done by launching the \e[1muf-first-setup.sh\e[0m script that comes in the repository."
+    printf "\nIf you do not end up using it DELETE IT. Otherwise, it will delete itself after first usage."
+    printf "\n\nAdditionally, verify the script using the checksums found at https://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\n\n"
  }
 
 # Prints the conditions under which the GPLv3 license allows the program to be redistributed
@@ -586,7 +620,7 @@ PrivacyPolicyMessage () {
 SaveStatsComments () {
     # Checks if NOCOMMENT variable is true
     if [ "$NOCOMMENT" != "true" ] ; then
-        printf "\n\n\e[1mType in the letters \"~esc~\" to exit the comments bar\n= = =\n"
+        printf "\n\n\e[1mT* ype in the letters \"~esc~\" to exit the comments bar\n= = =\n"
         COMMENTINPUT=""
         # Loops until user types in 'esc'
         until [ "$COMMENTINPUT" = "~esc~" ] ; do
@@ -596,13 +630,13 @@ SaveStatsComments () {
         done
         printf "= = =\n\e[0m"
         if [ "tempfileISSUEFLAG" = true ] ; then
-            LOGCOMMENTS="tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED"
+            LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
             ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
         else
             LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
             ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
             if [ "$LOGCOMMENTS" = "" ] ; then
-                LOGCOMMENTS="*No comments by user*"
+                LOGCOMMENTS="* No comments by user*"
                 ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
             fi
         fi
@@ -754,7 +788,7 @@ SaveStats () {
         LOGFILEPATH="$LOG_DIR_PATH"
     else
         #LOGFILEPATH="$($ROOTUSE find $(pwd) -type d -name "update_full-unix")"
-        LOGFILEPATH="$(pwd $0)"
+        LOGFILEPATH="$(pwd)"
     fi
     #LOG_FILE="$LOGFILEPATH/uf-unix-log.txt"
     ( echo "$LOGFILEPATH/uf-unix-log.txt" ) > ./tempfile_LOGFILEPATH
@@ -806,7 +840,7 @@ SaveStats () {
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
-            printf "Log Saved...\nAll done!\n"
+            printf "* Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
         # If two or more incompatible functional arguments are detected
@@ -821,7 +855,7 @@ SaveStats () {
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
-            printf "Log Saved...\nAll done!\n"
+            printf "* Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
         else
@@ -834,7 +868,7 @@ SaveStats () {
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
-            printf "Log Saved...\nAll done!\n"
+            printf "* Log Saved...\nAll done!\n"
             ExitStatement
             exit 0
         fi
@@ -842,7 +876,7 @@ SaveStats () {
         # Remove leftover tempfiles
         $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
         $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
-        echo "All done!"
+        echo "* All done!"
         ExitStatement
         exit 0
     fi
@@ -868,10 +902,6 @@ ActionFlag () {
                 "save-statistics" | "ss")
                     DESC_SS=" and saving in log"
                     SAVECONFIRM=true
-                    ;;
-                "no-test" | "nt")
-                    DESC_NT=" skipping ping testing"
-                    TEST_CONNECTION=false
                     ;;
                 "custom-domain" | "cd")
                     DESC_CD=" using custom domain"
@@ -917,6 +947,7 @@ ActionFlag () {
                     ;;
             esac
             ;;
+        # Modifiers
         ":"*)
             ARG_MOD=$1
             ARG_MOD="$(echo "$ARG_MOD" | cut -c "2-")"
@@ -928,7 +959,7 @@ ActionFlag () {
                             DESC_SS=" and saving in log(no comments)"
                             ;;
                         *)
-                            echo "ARGUMENT NOT RECOGNISED!! (002)"
+                            echo "!!ARGUMENT NOT RECOGNISED!! (002)"
                             printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                             exit 1
                             ;;
@@ -944,7 +975,7 @@ ActionFlag () {
                     DESC_CLP=" using custom log PATH ($LOG_DIR_PATH)"
                     ;;
                 *)
-                    echo "NO PREVIOUS MATCHING MAIN ARGUMENT"
+                    echo "!!NO PREVIOUS MATCHING MAIN ARGUMENT"
                     printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                     exit 1
                     ;;
@@ -953,7 +984,7 @@ ActionFlag () {
         "")
             ;;
         *)
-            echo "ARGUMENT NOT RECOGNISED!! (003)"
+            echo "!!ARGUMENT NOT RECOGNISED!! (003)"
             printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
             echo $1
             exit 1
@@ -963,6 +994,26 @@ ActionFlag () {
 
 # Preperation Function
 ActionPrep () {
+    # Attempts to find the specific UNIX Distribution
+    case $(uname) in
+        "OpenBSD")
+            DISTRO_NAME="OpenBSD"
+            ;;
+        "FreeBSD")
+            DISTRO_NAME="FreeBSD"
+            ;;
+        # If uname returns 'Linux', attempt to filter out specific distro
+        "Linux")
+            if [ -f "/etc/os-release" ] ; then
+                DISTRO_NAME="$(cat /etc/os-release | grep "PRETTY_NAME=" | cut -c 13-)"
+            else
+                DISTRO_NAME="*Unknown*"
+            fi
+            ;;
+        *)
+            DISTRO_NAME="*Unknown*"
+            ;;
+    esac
     # Seperates between descriptive and functional arguments
     # Descriptive arguments below:
     if [ "$CONDITIONS" = "true" ] || [ "$PRIVACYPOLICY" = "true" ] || [ "$WARRANTY" = "true" ] || [ "$HELP" = "true" ] ; then
@@ -983,10 +1034,10 @@ ActionPrep () {
     else
         # Functional argument ERRORS
         # Error if all arguments are attempted
-        if [ "$SAVECONFIRM" = "true" ] && [ "$TEST_CONNECTION" = "false" ] && [ "$CUSTOM_DOMAIN" = "true" ] && [ "$MANUAL_ALL" = "true" ] && [ "$DISABLEALT" = "true" ] && [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
+        if [ "$SAVECONFIRM" = "true" ] && [ "$CUSTOM_DOMAIN" = "true" ] && [ "$MANUAL_ALL" = "true" ] && [ "$DISABLEALT" = "true" ] && [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
             echo "All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
             echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
-            if [ "$SAVECONFIRM" = true ] ; then
+            if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely all possible arguments attempted."
                 SaveStats
@@ -997,7 +1048,7 @@ ActionPrep () {
         # Error for mixed -ao/--alternate-only and -dam/--disable-alt-managers
         if [ "$DISABLEALT" = "true" ] && [ "$ALTONLY" = "true" ] ; then
             echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
-            if [ "$SAVECONFIRM" = true ] ; then
+            if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely -dam / --disable-alt-managers and -ao / --alt-only mixed."
                 SaveStats
@@ -1007,21 +1058,10 @@ ActionPrep () {
         fi
         # Error for mixed -yu/--yum-update and -ao/--alt-only
         if [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
-        echo "Invalid argument combination (likely -ao/--alt-only and -yu/--yum-update). Relaunch script with valid combination."
-            if [ "$SAVECONFIRM" = true ] ; then
+            echo "Invalid argument combination (likely -ao/--alt-only and -yu/--yum-update). Relaunch script with valid combination."
+            if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely -yu / --yum-update and -ao / --alt-only mixed."
-                SaveStats
-            else
-                exit 1
-            fi
-        fi
-        # Error for mixed -nt/--no-test and -cd/--custom-domain
-        if [ "$CUSTOM_DOMAIN" = "true" ] && [ "$TEST_CONNECTION" = "false" ] ; then
-            echo "Invalid argument combination (likely -nt/--no-test and -cd/--custom-domain). Relaunch script with valid combination."
-            if [ "$SAVECONFIRM" = true ] ; then
-                SAVESTATINCOMPARGS=true
-                INCOMPARGS_DETAIL="Likely -cd / --custom-domain and -nt / --no-test mixed."
                 SaveStats
             else
                 exit 1
@@ -1030,7 +1070,7 @@ ActionPrep () {
         # Error for mixed -ss/--save-statistics and -clp/--custom-log-path
         if [ "$SAVECONFIRM" = "false" ] && [ "$CUSTOMLOGPATH" = "true" ] ; then
             echo "Missing partner argument (likely --save-statistics / -ss). Relaunch script with valid combination."
-            if [ "$SAVECONFIRM" = true ] ; then
+            if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely -ss / --save-statistics and -clp / --custom-log-path mixed."
                 SaveStats
@@ -1048,17 +1088,17 @@ ActionPrep () {
             MANQ_SUSE2=true
             # Makes all package manager questions manual
             MANQ=" "
-            while [ "$MANQ_DEB1" = true ] ; do
-                printf "Are you updating a \e[3mDebian/Ubuntu-based system\e[0m?\n"
-                printf "[Y/y]es/[N/n]o < "
+            while [ "$MANQ_DEB1" = "true" ] ; do
+                printf "* Are you updating a \e[3mDebian/Ubuntu-based system\e[0m?\n"
+                printf "\t[Y/y]es/[N/n]o < "
                 read MANQ_R1
                 case $MANQ_R1 in
                     "N" | "n" | "No" | "No" | "NO" | "nO")
                         MANQ_DEB1=false
                         ;;
                     "Y" | "y" | "Yes" | "yes" | "YES" | "yES")
-                        while [ "$MANQ_DEB2" = true ] ; do
-                            printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
+                        while [ "$MANQ_DEB2" = "true" ] ; do
+                            printf "* Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] upgrade\n\t"
                             printf " < "
                             read MANQ_R2
                             case $MANQ_R2 in
@@ -1078,19 +1118,19 @@ ActionPrep () {
                                     MANQ_DEB2=false
                                     ;;
                                 *)
-                                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                                    printf "!!Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
                                     ;;
                             esac
                         done
                         ;;
                     *)
-                        printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                        printf "!!Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
                         ;;
                 esac
             done
-            while [ "$MANQ_SUSE1" = true ] ; do
-                printf "Are you updating an \e[3mOpenSUSE\e[0m system?\n"
-                printf "[Y/y]es/[N/n]o < "
+            while [ "$MANQ_SUSE1" = "true" ] ; do
+                printf "* Are you updating an \e[3mOpenSUSE\e[0m system?\n"
+                printf "\t[Y/y]es/[N/n]o < "
                 read MANQ_R1
                 case $MANQ_R1 in
                     "N" | "n" | "No" | "no" | "NO")
@@ -1099,7 +1139,7 @@ ActionPrep () {
                         ;;
                     "Y" | "y" | "Yes" | "yes" | "YES")
                         while [ "$MANQ_SUSE2" = true ] ; do
-                            printf "Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
+                            printf "* Would you like to run: \n\t[1] dist-upgrade (\e[1mdefault\e[0m)\n\tor\n\t[2] update\n\t"
                             printf " < "
                             read MANQ_R2
                             case $MANQ_R2 in
@@ -1114,13 +1154,13 @@ ActionPrep () {
                                     MANQ_SUSE2=false
                                     ;;
                                 *)
-                                    printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                                    printf "!!Please select one of the two options. Otherwise, quit and re-launch the script.\n\n"
                                     ;;
                             esac
                         done
                         ;;
                     *)
-                        printf "Please select one of the two options. Otherwise, quit and re-leanch the script.\n\n"
+                        printf "!!Please select one of the two options. Otherwise, quit and re-launch the script.\n\n"
                         ;;
                 esac
             done
@@ -1143,21 +1183,35 @@ ActionPrep () {
             fi
         fi
         # Network Test
-        if [ "$TEST_CONNECTION" = "true" ] ; then
-            # Using default domain
-            if [ "$CUSTOM_DOMAIN" = "false" ] ; then
-                PING_TARGET="cloudflare.com"
-                NetworkTest
-            # Using custom domain
-            elif [ "$CUSTOM_DOMAIN" = "true" ] ; then
-                if [ "$PRE_CD" = "true" ] ; then
-                    PING_TARGET=$PRELOADED_CUSTOM_DOMAIN
-                elif [ "$PRE_CD" != "true" ] && [ "$MANUAL_ALL" = "false" ] ; then
-                    printf "Type domain: < "
-                    read PING_TARGET
+        if [ "$CUSTOM_DOMAIN" = "false" ] ; then
+            NetworkTest raw.githubusercontent.com
+            if [ "$EXIT1" = "true" ] ; then
+                if [ "$SAVECONFIRM" = "true" ] ; then
+                    SAVESTATSNOPING=true
+                    SaveStats
+                else
+                    exit 1
                 fi
-                DESC_CD=" using custom domain($PING_TARGET)"
-                NetworkTest
+            fi
+        # Using custom domain
+        elif [ "$CUSTOM_DOMAIN" = "true" ] ; then
+            if [ "$PRE_CD" = "true" ] ; then
+                PING_TARGET=$PRELOADED_CUSTOM_DOMAIN
+            elif [ "$PRE_CD" != "true" ] && [ "$MANUAL_ALL" = "false" ] ; then
+                printf "Type domain: < "
+                read PING_TARGET
+            fi
+            DESC_CD=" using custom domain($PING_TARGET)"
+            NetworkTest raw.githubusercontent.com &
+            NetworkTest $PING_TARGET &
+            wait
+            if [ "$EXIT1" = "true" ] ; then
+                if [ "$SAVECONFIRM" = "true" ] ; then
+                    SAVESTATSNOPING=true
+                    SaveStats
+                else
+                    exit 1
+                fi
             fi
         fi
     fi
@@ -1198,20 +1252,22 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-FULL_VERSION_NUM="1.4.4 (June 7th 2023)"
-SHORT_VERSION_NUM="1.4.4"
+FULL_VERSION_NUM="1.5.4 (August 17th 2023)"
+SHORT_VERSION_NUM="1.5.4"
 # Sets up initial variables
 RISKYOPERATION=false
 ALLARGS=$@
+DISTRO_NAME=""
 MANUAL_ALL=false
 MANQ="-y"
 SAVECONFIRM=false
-TEST_CONNECTION=true
+#TEST_CUSTOM_CONNECTION=true
 CUSTOM_DOMAIN=false
 DISABLEALT=false
 ALTONLY=false
 APT_UPGRADE="dist-upgrade"
 SUSE_UPGRADE="dist-upgrade"
+LOOP_INPUT=true
 # |-- For checking root permission
 NOROOT=0
 # |-- For event of failed ping
@@ -1259,7 +1315,7 @@ if [ "$(whoami)" != "root" ] ; then
         printf "\t\e[3;5mNeither sudo nor doas detected!\e[0m\n"
         printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
         exit 1
-    # Redundant?
+    # If user has no permissions in neither SUDO nor DOAS
     elif [ "$NOROOT" = "2" ] ; then
         printf "\t\e[3;5mUser $(whoami) has no root privileges!\e[0m\n"
         printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
@@ -1269,9 +1325,9 @@ else
     printf "\tScript is run as root\n"
     ROOTUSE=""
 fi
-# Runs Checksum Checker (Not working with ZSH as of v1.4.4)
-ChecksumCheck
-# Collect arguments
+# Checks that at least one of the two dependencies, CURL and WGET, are met
+DependencyTest
+# Collects arguments
 while [ "$#" -gt 0 ]; do
     ActionFlag $1
     shift
@@ -1280,11 +1336,27 @@ done
 if [ "$#" -gt 11 ] ; then
     TooManyArgs
 fi
+# Prepares appropriate functions and variables for action
 ActionPrep
+# Runs the checksum-checker
+ChecksumCheck $TOOLUSE
+if [ "$?" = "1" ] ; then
+    printf "Checksum-Checker FAILED! Investigate!!\n"
+    case $RISKYOPERATION in
+        "true")
+            printf "!!!Running despite Checksum-Checker FAILING!!!\n"
+            WarrantyMessage
+            ;;
+        *)
+            printf "Check what is going on!\n"
+            exit 1
+            ;;
+    esac
+fi
 # Description
-DESC_LOG="$DESC_NT$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS$DESC_CLP"
-printf "Running \e[4mUpdate_Full [GENERIC UNIX] $SHORT_VERSION_NUM\e[01;m script\e[1m$DESC_LOG"
-printf "\e[0m:\nDate and Time is:\n\t$(date)\n"
+DESC_LOG="$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS$DESC_CLP"
+printf "* Running \e[4mUpdate_Full [GENERIC UNIX] $SHORT_VERSION_NUM\e[01;m script\e[1m$DESC_LOG"
+printf "\e[0m:\n* Date and Time is:\n\t$(date)\n"
 # Begins the package manager checker function
 CHECK_PKG=true
 CheckPkgAuto
