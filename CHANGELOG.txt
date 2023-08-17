@@ -1,3 +1,17 @@
+Release 1.5.4 (August 17th, 2023)
+ = = =
+ - Fully re-wrote and fixed Checksum-Checker function
+   - ZSH now works properly!
+   - CURL and WGET are both used for redundancy and better support for OS without CURL installed
+ - Removed '--no-test'/'-nc' argument
+   - Testing internet connection now mandatory, tests domain 'raw.githubusercontent.com' by default
+   - '--custom-domain'/'-cd' argument now add another domain to be tested, rather than replacing the default
+ - Added different symbols (* ,^ , !!) in front of messeges created by script in order to differentiate
+   package manager dialouges and script dialouges
+   - Exceptions include user input
+   - To be refined
+ - General minor re-writes
+
 Release 1.4.4 (June 7th, 2023)
  = = =
  - Partially patched issue with Checksum-Checker, reducing false positives for mis-matching checksums when running the script locally
