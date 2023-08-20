@@ -1,6 +1,6 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.5.4 (August 17th, 2023)
+# Version 1.5.5 (August 20th, 2023)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
@@ -11,6 +11,7 @@
 # Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
 # Checking the hashes from the github can help to check for tampering.
 
+
 # Prints Exit Statement
 ExitStatement () {
     printf "\tI hope this program was useful for you!\n\n"
@@ -20,7 +21,8 @@ ExitStatement () {
 # Checks for CURL/WGET dependency
 DependencyTest () {
     # Checks for CURL or WGET
-    if [ "$(curl > /dev/null 2>&1)" != "127" ] ; then
+    curl > /dev/null 2>&1
+    if [ "$?" != "127" ] ; then
         # CURL is the preferred tool
         printf "* CURL found, resuming!\n"
         TOOLUSE="CURL"
@@ -28,7 +30,8 @@ DependencyTest () {
     else
         printf "!!CURL missing\n"
         # Checks for WGET as backup
-        if [ "$(wget > /dev/null 2)" != "127" ] ; then
+        wget > /dev/null 2>&1
+        if [ "$?" != "127" ] ; then
             printf "* WGET found, resuming!\n"
             TOOLUSE="WGET"
         else
@@ -620,12 +623,12 @@ PrivacyPolicyMessage () {
 SaveStatsComments () {
     # Checks if NOCOMMENT variable is true
     if [ "$NOCOMMENT" != "true" ] ; then
-        printf "\n\n\e[1mT* ype in the letters \"~esc~\" to exit the comments bar\n= = =\n"
+        printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
         COMMENTINPUT=""
         # Loops until user types in 'esc'
         until [ "$COMMENTINPUT" = "~esc~" ] ; do
             ( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
-            printf "TYPE: "
+            printf "* \e[0mTYPE:\e[1m "
             read COMMENTINPUT
         done
         printf "= = =\n\e[0m"
@@ -889,6 +892,7 @@ ActionFlag () {
     case $1 in
         "-"* | "--"*)
             MAIN_ARG=$1
+            # Strip initial dashes -- or -
             case $MAIN_ARG in
                 "--"*"")
                     MAIN_ARG=$(echo "$MAIN_ARG" | cut -c "3-")
@@ -897,6 +901,7 @@ ActionFlag () {
                     MAIN_ARG=$(echo "$MAIN_ARG" | cut -c "2-")
                     ;;
             esac
+            # Read actual arguments
             case $MAIN_ARG in
                 # Functional Arguments
                 "save-statistics" | "ss")
@@ -952,6 +957,7 @@ ActionFlag () {
             ARG_MOD=$1
             ARG_MOD="$(echo "$ARG_MOD" | cut -c "2-")"
             case $MAIN_ARG in
+                # Modifiers for --save-statistics
                 "save-statistics" | "ss")
                     case $ARG_MOD in
                         "no-comment" | "nc")
@@ -965,15 +971,18 @@ ActionFlag () {
                             ;;
                     esac
                     ;;
+                # Modifiers for --custom-domain
                 "custom-domain" | "cd")
                     PRELOADED_CUSTOM_DOMAIN=$ARG_MOD
                     PRE_CD=true
                     ;;
+                # Modifiers for --custom-log-path
                 "custom-log-path" | "clp")
                     LOG_DIR_PATH=$ARG_MOD
                     PRE_CLP=true
                     DESC_CLP=" using custom log PATH ($LOG_DIR_PATH)"
                     ;;
+                # If no matching Functional argument is detected
                 *)
                     echo "!!NO PREVIOUS MATCHING MAIN ARGUMENT"
                     printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
@@ -981,10 +990,12 @@ ActionFlag () {
                     ;;
             esac
             ;;
+        # Ignore whitespace
         "")
             ;;
+        # If no arguments are recogninzed at all
         *)
-            echo "!!ARGUMENT NOT RECOGNISED!! (003)"
+            echo "!!ARGUMENT NOT RECOGNIZED!! (003)"
             printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
             echo $1
             exit 1
@@ -996,12 +1007,6 @@ ActionFlag () {
 ActionPrep () {
     # Attempts to find the specific UNIX Distribution
     case $(uname) in
-        "OpenBSD")
-            DISTRO_NAME="OpenBSD"
-            ;;
-        "FreeBSD")
-            DISTRO_NAME="FreeBSD"
-            ;;
         # If uname returns 'Linux', attempt to filter out specific distro
         "Linux")
             if [ -f "/etc/os-release" ] ; then
@@ -1010,6 +1015,13 @@ ActionPrep () {
                 DISTRO_NAME="*Unknown*"
             fi
             ;;
+        "OpenBSD")
+            DISTRO_NAME="OpenBSD"
+            ;;
+        "FreeBSD")
+            DISTRO_NAME="FreeBSD"
+            ;;
+
         *)
             DISTRO_NAME="*Unknown*"
             ;;
@@ -1252,8 +1264,8 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-FULL_VERSION_NUM="1.5.4 (August 17th 2023)"
-SHORT_VERSION_NUM="1.5.4"
+FULL_VERSION_NUM="1.5.5 (August 20th 2023)"
+SHORT_VERSION_NUM="1.5.5"
 # Sets up initial variables
 RISKYOPERATION=false
 ALLARGS=$@
@@ -1341,14 +1353,14 @@ ActionPrep
 # Runs the checksum-checker
 ChecksumCheck $TOOLUSE
 if [ "$?" = "1" ] ; then
-    printf "Checksum-Checker FAILED! Investigate!!\n"
+    printf "!!Checksum-Checker FAILED!\n"
     case $RISKYOPERATION in
         "true")
             printf "!!!Running despite Checksum-Checker FAILING!!!\n"
             WarrantyMessage
             ;;
         *)
-            printf "Check what is going on!\n"
+            printf "* Investigate what is going on!\n"
             exit 1
             ;;
     esac
