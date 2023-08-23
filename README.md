@@ -1,4 +1,4 @@
-## Welcome to Update_Full-UNIX (1.4.4)!
+## Welcome to Update_Full-UNIX (1.5.5)!
 
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of Operating Systems through their respective package managers.
 
