@@ -1,4 +1,4 @@
-release 1.5.5 (August 20th, 2023)
+Release 1.5.5 (August 20th, 2023)
  = = =
  - Patched checksums not working with OpenBSD, no longer needed to use --override-checksum argument
  - Patched dependency-checker incorrectly showing CURL as installed when it really is not.
