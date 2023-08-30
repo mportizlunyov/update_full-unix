@@ -1,3 +1,9 @@
+Release 1.5.6 (August 30th, 2023)
+ = = =
+ - Added support for OpenSUSE MicroOS
+ - Minor re-write with updating different OpenSUSE distros, inclding Zypper and Transactional-Update package managers
+ - Minor visual edits and corrections
+
 Release 1.5.5 (August 20th, 2023)
  = = =
  - Patched checksums not working with OpenBSD, no longer needed to use --override-checksum argument
