@@ -1,6 +1,6 @@
 # Written by Mikhail Patricio Ortiz-Lunyov
 #
-# Version 1.5.5 (August 20th, 2023)
+# Version 1.5.6 (August 30th, 2023)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
@@ -14,8 +14,8 @@
 
 # Prints Exit Statement
 ExitStatement () {
-    printf "\tI hope this program was useful for you!\n\n"
-    printf "\t\e[3mPlease give this project a star on github!\e[0m\n"
+    printf "\t* I hope this program was useful for you!\n\n"
+    printf "\t\e[3m* Please give this project a star on github!\e[0m\n"
 }
 
 # Checks for CURL/WGET dependency
@@ -46,6 +46,7 @@ DependencyTest () {
     else
         # If it does not exist, quit
         printf "!!PING NOT FOUND, QUITting NOW!!\n"
+        printf "!!Package \e[1miputils\e[0m missing!\n"
         exit 1
     fi
 }
@@ -90,17 +91,17 @@ ChecksumCheck () {
     esac
     $ROOTUSE $SHELL 00_CHECKSUM_CHECKER.sh $SHORT_VERSION_NUM $TOOLUSE $CURL_INSECURE
     if [ "$?" = "1" ] ; then
-    printf "Checksum-Checker FAILED! Investigate!!\n"
-    case $RISKYOPERATION in
-        "true")
-            printf "!!!Running despite Checksum-Checker FAILING!!!\n"
-            WarrantyMessage
-            ;;
-        *)
-            printf "Check what is going on!\n"
-            $ROOTUSE rm 00_CHECKSUM_CHECKER.sh
-            exit 1
-            ;;
+        printf "Checksum-Checker FAILED! Investigate!!\n"
+        case $RISKYOPERATION in
+            "true")
+                printf "!!!Running despite Checksum-Checker FAILING!!!\n"
+                WarrantyMessage
+                ;;
+            *)
+                printf "Check what is going on!\n"
+                $ROOTUSE rm 00_CHECKSUM_CHECKER.sh
+                exit 1
+                ;;
         esac
     fi
     $ROOTUSE rm 00_CHECKSUM_CHECKER.sh
@@ -128,7 +129,7 @@ NetworkTest () {
 # For Debian/Ubuntu-based operating systems
 AptUpdate () {
     APTFLAG=true
-    printf "\n\t\e[1mAPT detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mAPT detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE apt-get update
     $ROOTUSE apt-get $APT_UPGRADE $MANQ
     $ROOTUSE apt-get -f install $MANQ
@@ -138,7 +139,7 @@ AptUpdate () {
 
 # For Red-Hat based Linux Operating Systems
 RedHatUpdate (){
-    printf "\n\t\e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n"
     case $1 in
         # For YUM (legacy)
         "YUM")
@@ -173,7 +174,7 @@ SlackpkgUpdate () {
         MANQ="-batch=on -default_answer=y"
     fi
     SLACKFLAG=true
-    printf "\n\t\e[1mSLACKWARE detected!\e[0m\n"
+    printf "\n\t* \e[1mSLACKWARE detected!\e[0m\n"
     $ROOTUSE slackpkg $MANQ update
     $ROOTUSE slackpkg $MANQ install-new
     $ROOTUSE slackpkg $MANQ upgrade-all
@@ -183,7 +184,7 @@ SlackpkgUpdate () {
 # For Solus Linux-based operating systems
 EopkgUpdate () {
     EOPKGFLAG=true
-    printf "\n\t\e[1mSOLUS detected!\e[0m\n"
+    printf "\n\t* \e[1mSOLUS detected!\e[0m\n"
     $ROOTUSE eopkg update-repo
     $ROOTUSE eopkg upgrade $MANQ
 }
@@ -191,7 +192,7 @@ EopkgUpdate () {
 # For Flatpaks
 FlatpakUpdate () {
     FLATPAKFLAG=true
-    printf "\n\t\e[1mFLATPAK detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mFLATPAK detected under $DISTRO_NAME!\e[0m\n"
     flatpak update $MANQ
     flatpak uninstall --unused $MANQ
 }
@@ -199,14 +200,14 @@ FlatpakUpdate () {
 # For Snaps
 SnapUpdate () {
     SNAPFLAG=true
-    printf "\n\t\e[1mSNAP detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mSNAP detected under $DISTRO_NAME!\e[0m\n"
     snap refresh
 }
 
 # For Clear Linux
 SwupdUpdate () {
     SWUPDFLAG=true
-    printf "\n\t\e[1mCLEAR LINUX detected!\e[0m\n"
+    printf "\n\t* \e[1mCLEAR LINUX detected!\e[0m\n"
     echo "By default, Clear Linux automatically updates its packages. You may need to disable auto-update."
     $ROOTUSE swupd check-update $MANQ
     $ROOTUSE swupd update $MANQ
@@ -215,7 +216,7 @@ SwupdUpdate () {
 # For Alpine Linux
 ApkUpdate () {
     APKFLAG=true
-    printf "\n\t\e[1mALPINE LINUX detected!\e[0m\n"
+    printf "\n\t* \e[1mALPINE LINUX detected!\e[0m\n"
     $ROOTUSE apk update
     $ROOTUSE apk upgrade
     $ROOTUSE apk fix
@@ -224,7 +225,7 @@ ApkUpdate () {
 # For Arch Linux
 PacmanUpdate () {
     PACMANFLAG=true
-    printf "\n\t\e[1mPACMAN detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mPACMAN detected under $DISTRO_NAME!\e[0m\n"
     if [ "$MANUAL_ALL" != "true" ] ; then
         yes | $ROOTUSE pacman -Syu
     else
@@ -233,20 +234,31 @@ PacmanUpdate () {
 }
 
 # For OpenSUSE Linux
-ZypperUpdate () {
-    ZYPPERFLAG=true
-    printf "\n\t\e[1mOpenSUSE LINUX detected!\e[0m\n"
-    $ROOTUSE zypper list-updates
-    $ROOTUSE zypper patch-check
-    $ROOTUSE zypper $SUSE_UPGRADE $MANQ
-    $ROOTUSE zypper patch $MANQ
-    $ROOTUSE zypper purge-kernels
+OpenSuseUpdate () {
+    printf "\n\t* \e[1mOpenSUSE ($1) detected under $DISTRO_NAME!\e[0m\n"
+    case $1 in
+        # For OpenSUSE Tumbleweed and LEAP
+        "ZYPPER")
+            ZYPPERFLAG=true
+            $ROOTUSE zypper list-updates
+            $ROOTUSE zypper patch-check
+            $ROOTUSE zypper $SUSE_UPGRADE $MANQ
+            $ROOTUSE zypper patch $MANQ
+            $ROOTUSE zypper purge-kernels
+            ;;
+        # For MicroOS
+        "TRANSACTIONAL-UPDATE")
+            TRANUPDATEFLAG=true
+            $ROOTUSE transactional-update $SUSE_UPGRADE
+            $ROOTUSE transactional-update patch
+            ;;
+    esac
 }
 
 # For Nix OS Linux
 NixUpdate () {
     NIXFLAG=true
-    printf "\n\t\e[1mNIX PACKAGE MANAGER detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mNIX PACKAGE MANAGER detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE nix-channel --update
     $ROOTUSE nix-env -u '*'
     $ROOTUSE nix-env --delete-generations old
@@ -256,7 +268,7 @@ NixUpdate () {
 # For FreeBSD-based operating systems
 PkgUpdate () {
     PKGFLAG=true
-    printf "\n\t\e[1mFREEBSD detected!\e[0m\n"
+    printf "\n\t* \e[1mFREEBSD detected!\e[0m\n"
     $ROOTUSE pkg update
     $ROOTUSE pkg upgrade $MANQ
     $ROOTUSE pkg autoremove $MANQ
@@ -267,7 +279,7 @@ PkgUpdate () {
 # For OpenBSD
 Pkg_addUpdate () {
     PKG_ADDFLAG=true
-    printf "\n\t\e[1mOPENBSD detected!\e[0m\n"
+    printf "\n\t* \e[1mOPENBSD detected!\e[0m\n"
     $ROOTUSE pkg_add -Uuvm
     $ROOTUSE syspatch
 }
@@ -275,14 +287,14 @@ Pkg_addUpdate () {
 # For Portsnaps
 PortsnapUpdate () {
     PORTSNAPFLAG=true
-    printf "\n\t\e[1mPORTSNAP detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mPORTSNAP detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE portsnap auto
 }
 
 # For Homebrew
 BrewUpdate () {
     BREWFLAG=true
-    printf "\n\t\e[1mHOMEBREW detected under $DISTRO_NAME!!\e[0m\n"
+    printf "\n\t* \e[1mHOMEBREW detected under $DISTRO_NAME!!\e[0m\n"
     $ROOTUSE brew update
     $ROOTUSE brew upgrade -v
     $ROOTUSE brew cleanup -v
@@ -291,7 +303,7 @@ BrewUpdate () {
 # For Void Linux
 XbpsUpdate () {
     XBPSFLAG=true
-    printf "\n\t\e[1mVOID LINUX detected!\e[0m\n"
+    printf "\n\t* \e[1mVOID LINUX detected!\e[0m\n"
     $ROOTUSE xbps-install -u xbps
     $ROOTUSE xbps-install -Su
 }
@@ -299,7 +311,7 @@ XbpsUpdate () {
 # For RubyGems
 GemUpdate () {
     GEMFLAG=true
-    printf "\n\t\e[1mRUBYGEM detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mRUBYGEM detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE gem update
     $ROOTUSE gem cleanup
 }
@@ -307,22 +319,22 @@ GemUpdate () {
 # For Node.Js Package Manager
 NpmUpdate () {
     NPMFLAG=true
-    printf "\n\t\e[1mNODE.JS PACKAGE MANAGER detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mNODE.JS PACKAGE MANAGER detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE npm update
 }
 
 # For Yarn Package Manager
 YarnUpdate () {
     YARNFLAG=true
-    printf "\n\t\e[1mYARN detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mYARN detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE yarn upgrade
     $ROOTUSE yarn install
 }
 
 # For Pip and subsequent Versions
 PipxUpdate () {
-    PIPFLAG=true
-    printf "\n\t\e[1mPIPx detected under $DISTRO_NAME!\e[0m\n"
+    PIPxFLAG=true
+    printf "\n\t* \e[1mPIPx detected under $DISTRO_NAME!\e[0m\n"
     # Will Make version for pip3 and pip2 (for legacy support), Pipx for now
     pipx upgrade-all
 }
@@ -330,7 +342,7 @@ PipxUpdate () {
 # For Guix Package Manager
 GuixUpdate() {
     GUIXFLAG=true
-    printf "\n\t\e[1mGuix detected under $DISTRO_NAME!\e[0m\n"
+    printf "\n\t* \e[1mGuix detected under $DISTRO_NAME!\e[0m\n"
     $ROOTUSE guix pull
     $ROOTUSE guix upgrade
 }
@@ -433,7 +445,12 @@ CheckPkgAuto () {
             fi
             zypper > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "0" ] ; then
-                ZypperUpdate
+                $ROOTUSE transactional-update --version > /dev/null 2>&1
+                if [ "$?" != "127" -a "$?" = "0" ] ; then
+                    OpenSuseUpdate TRANSACTIONAL-UPDATE
+                else
+                    OpenSuseUpdate ZYPPER
+                fi
                 CHECK_PKG=false
             else
                 NOPKG=$(( $NOPKG + 1 ))
@@ -487,7 +504,7 @@ CheckPkgAuto () {
             else
                 NOPKG=$(( $NOPKG + 1 ))
             fi
-            yarn --version > /dev/null 2>&1
+            yarn > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "0" ] ; then
                 YarnUpdate
             else
@@ -692,8 +709,8 @@ SaveStatsPkgLog () {
     elif [ "$APKFLAG" = true ] ; then
         OFFICIALPKGMAN="APK package manager used."
         ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
-    elif [ "$PACMANFLAG" = true ] ; then
-        OFFICIALPKGMAN="PACMAN package manager used."
+    elif [ "$GUIXFLAG" = true ] ; then
+        OFFICIALPKGMAN="GUIX package manager used."
         ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     elif [ "$ZYPPERFLAG" = true ] ; then
         OFFICIALPKGMAN="ZYPPER package manager used."
@@ -716,12 +733,15 @@ SaveStatsPkgLog () {
     elif [ "$EOPKGFLAG" = true ] ; then
         OFFICIALPKGMAN="Eopkg package manager used."
         ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
-    elif [ "$OSTREEFLAG=" = true ] ; then
+    elif [ "$OSTREEFLAG" = true ] ; then
         OFFICIALPKGMAN="RPM-Ostree package manager used."
+        ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    elif [ "$TRANUPDATEFLAG" = true ] ; then
+        OFFICIALPKGMAN="Transactional-Update package manager used."
         ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
     fi
     # Changes variable ALTPKGMAN as nessesary
-    if [ "$FLATPAKFLAG" = true -o "$SNAPFLAG" = true -o "$PORTSNAPFLAG" = true -o "$BREWFLAG" = true -o "$GEMFLAG" = true -o "$YARNFLAG" = true -o "$NPMFLAG" = true -o "$PIPFLAG" = true ] ; then
+    if [ "$FLATPAKFLAG" = true -o "$SNAPFLAG" = true -o "$PORTSNAPFLAG" = true -o "$BREWFLAG" = true -o "$GEMFLAG" = true -o "$YARNFLAG" = true -o "$NPMFLAG" = true -o "$PIPxFLAG" = true ] ; then
         ALTPKGMAN="Alternative package managers used"
         ( echo "$ALTPKGMAN" ) > ./tempfile_ALTPKG
     fi
@@ -761,9 +781,9 @@ SaveStatsPkgLog () {
         ( echo "$STATUSNPM" ) > ./tempfile_NPM
         NPMFLAG=false
     fi
-    if [ "$PIPFLAG" = true ] ; then
-        STATUSPIP="USED"
-        ( echo "$STATUSPIP" ) > ./tempfile_PIP
+    if [ "$PIPxFLAG" = true ] ; then
+        STATUSPIPx="USED"
+        ( echo "$STATUSPIPx" ) > ./tempfile_PIPx
         PIPFLAG=false
     fi
     # Changes logfile depending on if 
@@ -781,7 +801,7 @@ SaveStatsPkgLog () {
         $ROOTUSE rm ./tempfile_GEM > /dev/null 2>&1
         $ROOTUSE rm ./tempfile_YARN > /dev/null 2>&1
         $ROOTUSE rm ./tempfile_NPM > /dev/null 2>&1
-        $ROOTUSE rm ./tempfile_PIP > /dev/null 2>&1
+        $ROOTUSE rm ./tempfile_PIPx > /dev/null 2>&1
     fi
 }
 
@@ -807,13 +827,13 @@ SaveStats () {
             ( echo "$DESCNOPING" ) > ./tempfile_DESCNOPING
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat tempfile_DESCNOPING))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCNOPING > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
             # Ending phrase
-            printf "Log Saved...\nAll done!\n"
+            printf "* Log Saved...\nAll done!\n"
             ExitStatement
             exit 1
         # If duplicate arguments are detcted (Potentially depreciated?)
@@ -837,7 +857,7 @@ SaveStats () {
             ( echo "$DESCTOOMANYARGS" ) > ./tempfile_DESCTOOMANYARGS
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCTOOMANYARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCTOOMANYARGS > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -852,7 +872,7 @@ SaveStats () {
             ( echo "$DESCINCOPARGS" ) > ./tempfile_DESCINCOPARGS
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCINCOPARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCINCOPARGS > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -866,7 +886,7 @@ SaveStats () {
             $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsPkgLog
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.4.4 (June 7th 2023)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
@@ -947,7 +967,7 @@ ActionFlag () {
                     ;;
                 *)
                     echo "ARGUMENT NOT RECOGNISED!! (001)"
-                    printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
+                    printf "* Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                     exit 1
                     ;;
             esac
@@ -966,7 +986,7 @@ ActionFlag () {
                             ;;
                         *)
                             echo "!!ARGUMENT NOT RECOGNISED!! (002)"
-                            printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
+                            printf "* Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                             exit 1
                             ;;
                     esac
@@ -985,7 +1005,7 @@ ActionFlag () {
                 # If no matching Functional argument is detected
                 *)
                     echo "!!NO PREVIOUS MATCHING MAIN ARGUMENT"
-                    printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
+                    printf "* Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
                     exit 1
                     ;;
             esac
@@ -996,7 +1016,7 @@ ActionFlag () {
         # If no arguments are recogninzed at all
         *)
             echo "!!ARGUMENT NOT RECOGNIZED!! (003)"
-            printf "Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
+            printf "* Try \e[1m--help\e[0m or \e[1m-h\e[0m?\n"
             echo $1
             exit 1
             ;;
@@ -1012,7 +1032,7 @@ ActionPrep () {
             if [ -f "/etc/os-release" ] ; then
                 DISTRO_NAME="$(cat /etc/os-release | grep "PRETTY_NAME=" | cut -c 13-)"
             else
-                DISTRO_NAME="*Unknown*"
+                DISTRO_NAME="*Unknown Linux*"
             fi
             ;;
         "OpenBSD")
@@ -1047,8 +1067,8 @@ ActionPrep () {
         # Functional argument ERRORS
         # Error if all arguments are attempted
         if [ "$SAVECONFIRM" = "true" ] && [ "$CUSTOM_DOMAIN" = "true" ] && [ "$MANUAL_ALL" = "true" ] && [ "$DISABLEALT" = "true" ] && [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
-            echo "All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
-            echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
+            echo "!!All Possible Arguments attempted! Not all functional variables are compatible with one-another!"
+            echo "!!Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely all possible arguments attempted."
@@ -1059,7 +1079,7 @@ ActionPrep () {
         fi
         # Error for mixed -ao/--alternate-only and -dam/--disable-alt-managers
         if [ "$DISABLEALT" = "true" ] && [ "$ALTONLY" = "true" ] ; then
-            echo "Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
+            echo "!!Invalid argument combination (likely -ao/--alt-only and -dam/--disable-alt-managers). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely -dam / --disable-alt-managers and -ao / --alt-only mixed."
@@ -1070,7 +1090,7 @@ ActionPrep () {
         fi
         # Error for mixed -yu/--yum-update and -ao/--alt-only
         if [ "$YUM_UPDATE" = "true" ] && [ "$ALTONLY" = "true" ] ; then
-            echo "Invalid argument combination (likely -ao/--alt-only and -yu/--yum-update). Relaunch script with valid combination."
+            echo "!!Invalid argument combination (likely -ao/--alt-only and -yu/--yum-update). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely -yu / --yum-update and -ao / --alt-only mixed."
@@ -1081,7 +1101,7 @@ ActionPrep () {
         fi
         # Error for mixed -ss/--save-statistics and -clp/--custom-log-path
         if [ "$SAVECONFIRM" = "false" ] && [ "$CUSTOMLOGPATH" = "true" ] ; then
-            echo "Missing partner argument (likely --save-statistics / -ss). Relaunch script with valid combination."
+            echo "!!Missing partner argument (likely --save-statistics / -ss). Relaunch script with valid combination."
             if [ "$SAVECONFIRM" = "true" ] ; then
                 SAVESTATINCOMPARGS=true
                 INCOMPARGS_DETAIL="Likely -ss / --save-statistics and -clp / --custom-log-path mixed."
@@ -1155,13 +1175,14 @@ ActionPrep () {
                             printf " < "
                             read MANQ_R2
                             case $MANQ_R2 in
+                                # Abbreviations for compatibility with OpenSuse MicroOS
                                 "1")
-                                    SUSE_UPGRADE="dist-upgrade"
+                                    SUSE_UPGRADE="dup"
                                     MANQ_SUSE1=false
                                     MANQ_SUSE2=false
                                     ;;
                                 "2")
-                                    SUSE_UPGRADE="update"
+                                    SUSE_UPGRADE="up"
                                     MANQ_SUSE1=false
                                     MANQ_SUSE2=false
                                     ;;
@@ -1231,7 +1252,7 @@ ActionPrep () {
     if [ "$LOG_DIR_PATH" != "" ] ; then
         if [ ! -d "$LOG_DIR_PATH"  ] ; then
             # If not, exit
-            printf "LOG-FILE PATH DOES NOT EXIST\n"
+            printf "!!LOG-FILE PATH DOES NOT EXIST, QUITting!\n"
             exit 1
         fi
     fi
@@ -1264,8 +1285,8 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-FULL_VERSION_NUM="1.5.5 (August 20th 2023)"
-SHORT_VERSION_NUM="1.5.5"
+FULL_VERSION_NUM="1.5.6 (August 30th 2023)"
+SHORT_VERSION_NUM="1.5.6"
 # Sets up initial variables
 RISKYOPERATION=false
 ALLARGS=$@
@@ -1278,7 +1299,7 @@ CUSTOM_DOMAIN=false
 DISABLEALT=false
 ALTONLY=false
 APT_UPGRADE="dist-upgrade"
-SUSE_UPGRADE="dist-upgrade"
+SUSE_UPGRADE="dup"
 LOOP_INPUT=true
 # |-- For checking root permission
 NOROOT=0
@@ -1291,19 +1312,19 @@ SAVESTATTOOMANYARGS=false
 # Checks for root privileges
 if [ "$(whoami)" != "root" ] ; then
     # Prints status message
-    printf "\e[3mScript not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
+    printf "\e[3m* Script not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
     # Test SUDO presence
     sudo > /dev/null 2>&1
     if [ "$?" != 127 -a "$?" = 1 ] ; then
         if [ -n "$(sudo -l | grep "ALL")" ] ; then
-            printf "\t\e[3mUser $(whoami) has sudo permissions, continuing...\e[0m\n"
+            printf "\t\e[3m* User $(whoami) has sudo permissions, continuing...\e[0m\n"
             ROOTUSE="sudo"
         else
-            printf "no sudo priviledges detected...\n"
+            printf "* no sudo priviledges detected...\n"
             NOROOT=$(( $NOROOT + 1 ))
         fi
     else
-        printf "sudo not found..."
+        printf "* sudo not found..."
         NOROOT=$(( $NOROOT + 1 ))
         NOSUDO=true
     fi
@@ -1311,30 +1332,30 @@ if [ "$(whoami)" != "root" ] ; then
     doas > /dev/null 2>&1
     if [ "$?" != 127 ] && [ "$?" = 1  ] ; then
         if [ -n "$(groups $(whoami) | grep "wheel")" ] ; then
-            printf "\t\e[3mUser $(whoami) has doas permissions, continuing...\e[0m\n"
+            printf "\t\e[3m* User $(whoami) has doas permissions, continuing...\e[0m\n"
             ROOTUSE="doas"
         else
-            printf "no doas priviledges detected...\n"
+            printf "* no doas priviledges detected...\n"
             NOROOT=$(( $NOROOT + 1 ))
         fi
     else
-        printf "doas not found...\n"
+        printf "* doas not found...\n"
         NOROOT=$(( $NOROOT + 1 ))
         NODOAS=true
     fi
     # If neither SUDO or DOAS is not present
     if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
-        printf "\t\e[3;5mNeither sudo nor doas detected!\e[0m\n"
-        printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+        printf "\t\e[3;5m!!Neither sudo nor doas detected!\e[0m\n"
+        printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
         exit 1
     # If user has no permissions in neither SUDO nor DOAS
     elif [ "$NOROOT" = "2" ] ; then
-        printf "\t\e[3;5mUser $(whoami) has no root privileges!\e[0m\n"
-        printf "Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+        printf "\t\e[3;5m!!User $(whoami) has no root privileges!\e[0m\n"
+        printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
         exit 1
     fi
 else
-    printf "\tScript is run as root\n"
+    printf "\t* Script is run as root\n"
     ROOTUSE=""
 fi
 # Checks that at least one of the two dependencies, CURL and WGET, are met
