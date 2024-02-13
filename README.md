@@ -1,4 +1,4 @@
-## Welcome to Update_Full-UNIX (1.5.6)!
+## Welcome to Update_Full-UNIX (1.5.7)!
 
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of Operating Systems through their respective package managers.
 
@@ -93,7 +93,7 @@ Besides the native package managers, Update_Full also supports these _additional
  ## I hope you enjoy using this program!
  ### Please leave a star if you liked it!
 
- > Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
+ > Copyright (C) 2024  Mikhail Patricio Ortiz-Lunyov
  > Update_Full-UNIX is a script that allows for automatic updating of many
  > different UNIX (Linux, BSD, etc) distros across many different shells (see details).
  > This program is free software: you can redistribute it and/or modify
