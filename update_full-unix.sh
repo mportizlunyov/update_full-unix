@@ -1,6 +1,6 @@
 # Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 1.5.7 (January 12th, 2024)
+# Version 1.5.7 (February 12th, 2024)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
