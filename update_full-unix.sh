@@ -1027,7 +1027,7 @@ SaveStats () {
             ( echo "$DESCNOPING" ) > ./tempfile_DESCNOPING
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat tempfile_DESCNOPING))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.7 (February 12th 2024)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCNOPING > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -1057,7 +1057,7 @@ SaveStats () {
             ( echo "$DESCTOOMANYARGS" ) > ./tempfile_DESCTOOMANYARGS
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCTOOMANYARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.7 (February 12th 2024)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCTOOMANYARGS > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -1072,7 +1072,7 @@ SaveStats () {
             ( echo "$DESCINCOPARGS" ) > ./tempfile_DESCINCOPARGS
             $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCINCOPARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.7 (February 12th 2024)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_DESCINCOPARGS > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
@@ -1086,7 +1086,7 @@ SaveStats () {
             $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             SaveStatsPkgLog
             SaveStatsComments
-            $ROOTUSE $SHELL -c '( printf "Version 1.5.6 (August 30th 2023)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE $SHELL -c '( printf "Version 1.5.7 (February 12th 2024)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
             # Remove leftover tempfiles
             $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
             $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
@@ -1604,7 +1604,7 @@ CheckPkgAuto
 # Checks if commenting was enabled
 SaveStats
 
-# Update_full-unix.sh  Copyright (C) 2023  Mikhail P. Ortiz-Lunyov (mportizlunyov)
+# Update_full-unix.sh  Copyright (C) 2024  Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #   This program comes with ABSOLUTELY NO WARRANTY; for details add argument `-w' or `--warranty'.
 #   This is free software, and you are welcome to redistribute it
 #   under certain conditions; add argument `-c' or `--conditions' for details.
