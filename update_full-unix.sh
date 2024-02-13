@@ -1,13 +1,13 @@
-# Written by Mikhail Patricio Ortiz-Lunyov
+# Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 1.5.6 (August 30th, 2023)
+# Version 1.5.7 (January 12th, 2024)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
 #
 #
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
-# More information about license in readme and bottom.
+# More information about license in README and bottom.
 # Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
 # Checking the hashes from the github can help to check for tampering.
 
@@ -144,7 +144,6 @@ RedHatUpdate (){
         # For YUM (legacy)
         "YUM")
             YUMFLAG=true
-            #printf "\t\e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n\n"
             $ROOTUSE yum check-update $MANQ
             $ROOTUSE yum update $MANQ
             $ROOTUSE yum autoremove $MANQ
@@ -152,7 +151,6 @@ RedHatUpdate (){
         # For DNF (modern)
         "DNF")
             DNFFLAG=true
-            #printf "\t\e[1mRED HAT ($1) detected under $DISTRO_NAME!\e[0m\n\n"
             $ROOTUSE dnf check-update $MANQ
             $ROOTUSE dnf update $MANQ
             $ROOTUSE dnf autoremove $MANQ_DEB1
@@ -160,7 +158,6 @@ RedHatUpdate (){
         # For RPM-OSTREE (found in Fedora SilverBlue, Kinoite, and CoreOS)
         "RPM-OSTREE")
             OSTREEFLAG=true
-            #printf "\t\e[1m RED HAT ($1) detected under $DISTRO_NAME!\e[0m\n\n"
             rpm-ostree cancel
             rpm-ostree upgrade --check
             rpm-ostree upgrade
@@ -370,152 +367,306 @@ CheckPkgAuto () {
                 NOPKG=$(( $NOPKG + 1 ))
             fi
             slackpkg > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                SlackpkgUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "0" ] ; then
+            #    SlackpkgUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"0")
+					SlackpkgUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             eopkg > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                EopkgUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    EopkgUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					EopkgUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             xbps-install > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                XbpsUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    XbpsUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					XbpsUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					;;
+            esac
             apt > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                AptUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    AptUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					AptUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             if [ "$YUM_UPDATE" = "true" ] ; then
                 yum > /dev/null 2>&1
-                if [ "$?" != "127" -a "$?" = 0 ] ; then
-                    RedHatUpdate YUM
-                    CHECK_PKG=false
-                else
-                    NOPKG=$(($NOPKG + 1 ))
-                fi
+                #if [ "$?" != "127" -a "$?" = 0 ] ; then
+                #    RedHatUpdate YUM
+                #    CHECK_PKG=false
+                #else
+                #    NOPKG=$(($NOPKG + 1 ))
+                #fi
+                case $? in
+					"0")
+						RedHatUpdate YUM
+						CHECK_PKG=false
+						;;
+					"127")
+						NOPKG=$(( $NOPKG + 1 ))
+						;;
+                esac
             else
                 dnf > /dev/null 2>&1
-                if [ "$?" != "127" -a "$?" = 0 ] ; then
-                    RedHatUpdate DNF
-                    DNF_USED_ONCE=true
-                    CHECK_PKG=false
-                else
-                    NOPKG=$(($NOPKG + 1 ))
-                fi
+                #if [ "$?" != "127" -a "$?" = 0 ] ; then
+                #    RedHatUpdate DNF
+                #    DNF_USED_ONCE=true
+                #    CHECK_PKG=false
+                #else
+                #    NOPKG=$(($NOPKG + 1 ))
+                #fi
+                case $? in
+					"0")
+						RedHatUpdate DNF
+						DNF_USED_ONCE=true
+						CHECK_PKG=false
+						;;
+					"127")
+						NOPKG=$(($NOPKG + 1 ))
+						;;
+                esac
             fi
             rpm-ostree > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                RedHatUpdate RPM-OSTREE
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    RedHatUpdate RPM-OSTREE
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					RedHatUpdate RPM-OSTREE
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             swupd > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                SwupdUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "0" ] ; then
+            #    SwupdUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"0")
+					SwupdUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             apk > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                ApkUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    ApkUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					ApkUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             pacman > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                PacmanUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    PacmanUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					PacmanUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             zypper > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                $ROOTUSE transactional-update --version > /dev/null 2>&1
-                if [ "$?" != "127" -a "$?" = "0" ] ; then
-                    OpenSuseUpdate TRANSACTIONAL-UPDATE
-                else
-                    OpenSuseUpdate ZYPPER
-                fi
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "0" ] ; then
+            #   $ROOTUSE transactional-update --version > /dev/null 2>&1
+            #    if [ "$?" != "127" -a "$?" = "0" ] ; then
+            #        OpenSuseUpdate TRANSACTIONAL-UPDATE
+            #    else
+            #        OpenSuseUpdate ZYPPER
+            #    fi
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"0")
+					$ROOTUSE transactional-update --version > /dev/null 2>&1
+					case $? in
+						"0")
+							OpenSuseUpdate TRANSACTIONAL-UPDATE
+							;;
+						"127")
+							OpenSuseUpdate ZYPPER
+							;;
+					esac
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             pkg > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                PkgUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    PkgUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					PkgUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             pkg_add > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                Pkg_addUpdate
-                CHECK_PKG=false
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            #if [ "$?" != "127" -a "$?" = "1" ] ; then
+            #    Pkg_addUpdate
+            #    CHECK_PKG=false
+            #else
+            #    NOPKG=$(( $NOPKG + 1 ))
+            #fi
+            case $? in
+				"1")
+					Pkg_addUpdate
+					CHECK_PKG=false
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
         else
             printf "\t\e[1m* Skipping Official Package managers...\e[0m\n\n"
         fi
         # If disabling alternative package managers is not disabled.
         if [ "$DISABLEALT" = false ] ; then
             flatpak > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                FlatpakUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"1")
+					FlatpakUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             snap > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                SnapUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"0")
+					SnapUpdate
+					;;
+				"1")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             brew > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                BrewUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"1")
+					BrewUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             portsnap > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                PortsnapUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"0")
+					PortsnapUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             gem > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                GemUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"1")
+					GemUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             yarn > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "0" ] ; then
-                YarnUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"0")
+				YarnUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             pipx > /dev/null 2>&1
-            if [ "$?" != "127" -a "$?" = "1" ] ; then
-                PipxUpdate
-            else
-                NOPKG=$(( $NOPKG + 1 ))
-            fi
+            case $? in
+				"1")
+					PipxUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
+            npm > /dev/null 2>&1
+            case $? in
+				"1")
+					NpmUpdate
+					;;
+				"127")
+					NOPKG=$(( $NOPKG + 1 ))
+					;;
+            esac
             nix > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "nixos")" = "" ] ; then
                 NixUpdate
@@ -639,32 +790,81 @@ PrivacyPolicyMessage () {
 # This function sets up the commenting function in the SaveStats function
 SaveStatsComments () {
     # Checks if NOCOMMENT variable is true
-    if [ "$NOCOMMENT" != "true" ] ; then
-        printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
-        COMMENTINPUT=""
-        # Loops until user types in 'esc'
-        until [ "$COMMENTINPUT" = "~esc~" ] ; do
-            ( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
-            printf "* \e[0mTYPE:\e[1m "
-            read COMMENTINPUT
-        done
-        printf "= = =\n\e[0m"
-        if [ "tempfileISSUEFLAG" = true ] ; then
-            LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
-            ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-        else
-            LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
-            ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-            if [ "$LOGCOMMENTS" = "" ] ; then
-                LOGCOMMENTS="* No comments by user*"
-                ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-            fi
-        fi
-        $ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
-        $ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
-    else
-        $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
-    fi
+    #if [ "$NOCOMMENT" != "true" ] ; then
+    #    printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
+    #    COMMENTINPUT=""
+    #    # Loops until user types in 'esc'
+    #    until [ "$COMMENTINPUT" = "~esc~" ] ; do
+    #        ( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
+    #        printf "* \e[0mTYPE:\e[1m "
+    #        read COMMENTINPUT
+    #    done
+    #    printf "= = =\n\e[0m"
+    #    if [ "tempfileISSUEFLAG" = true ] ; then
+    #        LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
+    #        ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+    #    else
+    #        LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
+    #        ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+    #        if [ "$LOGCOMMENTS" = "" ] ; then
+    #            LOGCOMMENTS="* No comments by user*"
+    #            ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+    #        fi
+    #    fi
+    #    $ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
+    #    $ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
+    #else
+    #    $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
+    #fi
+    case $NOCOMMENT in
+		"true")
+			$ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
+			;;
+		*)
+			printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
+			COMMENTINPUT=""
+			# Loops until user types in 'esc'
+			until [ "$COMMENTINPUT" = "~esc~" ] ; do
+				( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
+				printf "* \e[0mTYPE:\e[1m "
+				read COMMENTINPUT
+			done
+			printf "= = =\n\e[0m"
+			#if [ "tempfileISSUEFLAG" = true ] ; then
+			#	LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
+			#	( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+			#else
+			#	LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
+			#	( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+			#	if [ "$LOGCOMMENTS" = "" ] ; then
+			#		LOGCOMMENTS="* No comments by user*"
+			#		( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+			#	fi
+			#fi
+			case $tempfileISSUEFLAG in
+				"true")
+					LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
+					( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+					;;
+				*)
+					LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
+					( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+					if [ "$LOGCOMMENTS" = "" ] ; then
+						LOGCOMMENTS="* No comments by user*"
+						( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+					fi
+					#case $LOGCOMMENTS in
+					#	"")
+					#		LOGCOMMENTS="* No comments by user*"
+					#		( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+					#		;;
+					#esac
+					;;
+			esac
+			$ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
+			$ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
+			;;
+    esac
 }
 
 # This function records and sets up the package managers used by the script for the save-statistics argument.
@@ -688,8 +888,8 @@ SaveStatsPkgLog () {
     ( echo "$STATUSYARN" ) > ./tempfile_YARN
     STATUSNPM="NOT USED"
     ( echo "$STATUSNPM" ) > ./tempfile_NPM
-    STATUSPIP="NOT USED"
-    ( echo "$STATUSPIP" ) > ./tempfile_PIP
+    STATUSPIPx="NOT USED"
+    ( echo "$STATUSPIPx" ) > ./tempfile_PIPx
     # For official Package Managers
     if [ "$APTFLAG" = true ] ; then
         OFFICIALPKGMAN="APT package manager used."
@@ -784,13 +984,13 @@ SaveStatsPkgLog () {
     if [ "$PIPxFLAG" = true ] ; then
         STATUSPIPx="USED"
         ( echo "$STATUSPIPx" ) > ./tempfile_PIPx
-        PIPFLAG=false
+        PIPxFLAG=false
     fi
     # Changes logfile depending on if 
     if [ "$OFFICIALPKGMAN" = "No official package managers used" -a "$ALTPKGMAN" = "No alternative package managers used" ] ; then
         $ROOTUSE $SHELL -c '( echo "No package managers at all detected!" ) >> $(cat ./tempfile_LOGFILEPATH)'
     else
-        $ROOTUSE $SHELL -c '( echo "$(cat ./tempfile_OFFICIALPKG)" && printf "$(cat ./tempfile_ALTPKG)\n FLATPAK:  $(cat ./tempfile_FLATPAK)\n SNAP:     $(cat ./tempfile_SNAP)\n PORTSNAP: $(cat ./tempfile_PORTSNAP)\n BREW:     $(cat ./tempfile_BREW)\n GEM:      $(cat ./tempfile_GEM)\n NPM:      $(cat ./tempfile_NPM)\n PIP:      $(cat ./tempfile_PIP)\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+        $ROOTUSE $SHELL -c '( echo "$(cat ./tempfile_OFFICIALPKG)" && printf "$(cat ./tempfile_ALTPKG)\n FLATPAK:  $(cat ./tempfile_FLATPAK)\n SNAP:     $(cat ./tempfile_SNAP)\n PORTSNAP: $(cat ./tempfile_PORTSNAP)\n BREW:     $(cat ./tempfile_BREW)\n GEM:      $(cat ./tempfile_GEM)\n NPM:      $(cat ./tempfile_NPM)\n PIPx:     $(cat ./tempfile_PIPx)\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
         # Removes unneeded tempfiles
         $ROOTUSE rm ./tempfile_OFFICIALPKG > /dev/null 2>&1
         $ROOTUSE rm ./tempfile_ALTPKG > /dev/null 2>&1
@@ -1258,17 +1458,6 @@ ActionPrep () {
     fi
 }
 
-# Duplicate Argument Function (Potentially depreciated?)
-#DupArgs () {
-#    printf "NO DUPLICATE ARGS!!\n"
-#    if [ "$SAVECONFIRM" = true ] ; then
-#        SAVESTATDUPARGS=true
-#        SaveStats
-#    else
-#        exit 1
-#    fi
-#}
-
 # Too Many Argument Functions
 TooManyArgs () {
     printf "TOO MANY ARGUMENTS!!\n"
@@ -1285,8 +1474,8 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-FULL_VERSION_NUM="1.5.6 (August 30th 2023)"
-SHORT_VERSION_NUM="1.5.6"
+FULL_VERSION_NUM="1.5.7 (February 12th 2023)"
+SHORT_VERSION_NUM="1.5.7"
 # Sets up initial variables
 RISKYOPERATION=false
 ALLARGS=$@
@@ -1310,54 +1499,69 @@ SAVESTATSNOPING=false
 # |-- For event of too many arguments
 SAVESTATTOOMANYARGS=false
 # Checks for root privileges
-if [ "$(whoami)" != "root" ] ; then
-    # Prints status message
-    printf "\e[3m* Script not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
-    # Test SUDO presence
-    sudo > /dev/null 2>&1
-    if [ "$?" != 127 -a "$?" = 1 ] ; then
-        if [ -n "$(sudo -l | grep "ALL")" ] ; then
-            printf "\t\e[3m* User $(whoami) has sudo permissions, continuing...\e[0m\n"
-            ROOTUSE="sudo"
-        else
-            printf "* no sudo priviledges detected...\n"
-            NOROOT=$(( $NOROOT + 1 ))
-        fi
-    else
-        printf "* sudo not found..."
-        NOROOT=$(( $NOROOT + 1 ))
-        NOSUDO=true
-    fi
-    # Test DOAS presence
-    doas > /dev/null 2>&1
-    if [ "$?" != 127 ] && [ "$?" = 1  ] ; then
-        if [ -n "$(groups $(whoami) | grep "wheel")" ] ; then
-            printf "\t\e[3m* User $(whoami) has doas permissions, continuing...\e[0m\n"
-            ROOTUSE="doas"
-        else
-            printf "* no doas priviledges detected...\n"
-            NOROOT=$(( $NOROOT + 1 ))
-        fi
-    else
-        printf "* doas not found...\n"
-        NOROOT=$(( $NOROOT + 1 ))
-        NODOAS=true
-    fi
-    # If neither SUDO or DOAS is not present
-    if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
-        printf "\t\e[3;5m!!Neither sudo nor doas detected!\e[0m\n"
-        printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
-        exit 1
-    # If user has no permissions in neither SUDO nor DOAS
-    elif [ "$NOROOT" = "2" ] ; then
-        printf "\t\e[3;5m!!User $(whoami) has no root privileges!\e[0m\n"
-        printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
-        exit 1
-    fi
-else
-    printf "\t* Script is run as root\n"
-    ROOTUSE=""
-fi
+case $(whoami) in
+	"root")
+		printf "\t* Script is run as root\n"
+		ROOTUSE=""
+		;;
+	*)
+		# Prints status message
+		printf "\e[3m* Script not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
+		# Test SUDO presence
+		sudo > /dev/null 2>&1
+		case $? in
+			127)
+				printf "* sudo not found..."
+				NOROOT=$(( $NOROOT + 1 ))
+				NOSUDO=true
+				;;
+			*)
+				case $(sudo -l | grep "ALL") in
+					"")
+						printf "* no doas privileges detected...\n"
+						NOROOT=$(( $NOROOT + 1 ))
+						;;
+					*)
+						printf "\t\e[3m* User $(whoami) has sudo permissions, continuing...\e[0m\n"
+						ROOTUSE="sudo"
+						;;
+				esac
+				;;
+		esac
+		# Test DOAS presence
+		doas > /dev/null 2>&1
+		case $? in
+			127)
+				printf "* doas not found...\n"
+				NOROOT=$(( $NOROOT + 1 ))
+				NODOAS=true
+				;;
+			*)
+				case $(groups $(whoami) | grep "wheel") in
+					"")
+						printf "* no doas privileges detected...\n"
+						NOROOT=$(( $NOROOT + 1 ))
+						;;
+					*)
+						printf "\t\e[3m* User $(whoami) has doas permissions, continuing...\e[0m\n"
+						ROOTUSE="doas"
+						;;
+				esac
+				;;
+		esac
+		# If neither SUDO or DOAS is not present
+		if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
+			printf "\t\e[3;5m!!Neither sudo nor doas detected!\e[0m\n"
+			printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+			exit 1
+		# If user has no permissions in neither SUDO nor DOAS
+		elif [ "$NOROOT" = "2" ] ; then
+			printf "\t\e[3;5m!!User $(whoami) has no root privileges!\e[0m\n"
+			printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+			exit 1
+		fi
+		;;
+esac
 # Checks that at least one of the two dependencies, CURL and WGET, are met
 DependencyTest
 # Collects arguments
@@ -1372,20 +1576,24 @@ fi
 # Prepares appropriate functions and variables for action
 ActionPrep
 # Runs the checksum-checker
+
 ChecksumCheck $TOOLUSE
-if [ "$?" = "1" ] ; then
-    printf "!!Checksum-Checker FAILED!\n"
-    case $RISKYOPERATION in
-        "true")
-            printf "!!!Running despite Checksum-Checker FAILING!!!\n"
-            WarrantyMessage
-            ;;
-        *)
-            printf "* Investigate what is going on!\n"
-            exit 1
-            ;;
-    esac
-fi
+case $? in
+	"1")
+		printf "!!Checksum-Checker FAILED!\n"
+		case $RISKYOPERATION in
+			"true")
+				printf "!!!Running despite Checksum-Checker FAILING!!!\n"
+				WarrantyMessage
+				;;
+			*)
+				printf "* Investigate what is going on!\n"
+				exit 1
+				;;
+		esac
+		;;
+esac
+
 # Description
 DESC_LOG="$DESC_CD$DESC_MA$DESC_DAM$DESC_YU$DESC_AO$DESC_SS$DESC_CLP"
 printf "* Running \e[4mUpdate_Full [GENERIC UNIX] $SHORT_VERSION_NUM\e[01;m script\e[1m$DESC_LOG"
@@ -1396,7 +1604,7 @@ CheckPkgAuto
 # Checks if commenting was enabled
 SaveStats
 
-# Update_full-unix.sh  Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
+# Update_full-unix.sh  Copyright (C) 2023  Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #   This program comes with ABSOLUTELY NO WARRANTY; for details add argument `-w' or `--warranty'.
 #   This is free software, and you are welcome to redistribute it
 #   under certain conditions; add argument `-c' or `--conditions' for details.
