@@ -1,24 +1,27 @@
-# Written by Mikhail Patricio Ortiz-Lunyov
+# Written by Mikhail P. Ortiz-Lunyov
 #
-# Updated by March 4th, 2023
+# Updated May 21st 2024
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # More information about license in readme and bottom.
 
 # Checks for root user
 RootCheck() {
     # Checks whoami
-    if [ "$(whoami)" != "root" ] ; then
-        # Alerts user to lack of root execution
-        printf "\e[1mMISSING ROOT!\e[0m\n"
-        # Gives user advices for intended use
-        echo "Update_Full is intended to be used by sysadmins and others authorized to update Linux and UNIX-based systems."
-        echo "As such, it is best for the script to have limited writing and executing permissions."
-        echo "This first setup script changes the script's permission."
-        printf "\nAs such, this script needs to be executed as root to improve the update_full's permissions.\n"
-        exit 0
-    else
-        echo "Script run as root..."
-    fi
+    case `whoami` in
+        "root")
+            echo "Script run as root..."
+            ;;
+        *)
+            # Alerts user to lack of root execution
+            printf "\e[1mMISSING ROOT!\e[0m\n"
+            # Gives user advices for intended use
+            echo "Update_Full is intended to be used by sysadmins and others authorized to update Linux and UNIX-based systems."
+            echo "As such, it is best for the script to have limited writing and executing permissions."
+            echo "This first setup script changes the script's permission."
+            printf "\nAs such, this script needs to be executed as root to improve the update_full's permissions.\n"
+            exit 1
+            ;;
+    esac
 }
 
 # Sets default (root) settings
@@ -76,6 +79,7 @@ clear
 # Runs Root check function
 RootCheck
 SCRIPTNAME="update_full-unix.sh"
+
 # Start default check loop
 DEFAULT_Q_LOOP=true
 while [ "$DEFAULT_Q_LOOP" = true ] ; do
@@ -83,36 +87,49 @@ while [ "$DEFAULT_Q_LOOP" = true ] ; do
     echo "!!!RECOMMENDED!!!"
     printf "[Y]es/[N]o < "
     read DEFAULT_Q
-    if [ "$DEFAULT_Q" = "Y" -o "$DEFAULT_Q" = "y" -o "$DEFAULT_Q" = "Yes" -o "$DEFAULT_Q" = "yes" ] ; then
-        DefaultSettings
-        DEFAULT_Q_LOOP=false
-    elif [ "$DEFAULT_Q" = "N" -o "$DEFAULT_Q" = "n" -o "$DEFAULT_Q" = "No" -o "$DEFAULT_Q" = "no" ] ; then
-        Q_LOOP0=true
-        while [ "$Q_LOOP0" = true ] ; do
-            echo "What do you want to change?"
-            printf "\t[1] chown (change file owner and group)\n\t[2] chmod (change file mode bits)\n\t[3] Both\n\t[4] Use defaults instead\n < "
-            read Q_0
-            if [ "$Q_0" = "1" ] ; then
-                CustomChown
-                Q_LOOP0=false
-            elif [ "$Q_0" = "2" ] ; then
-                CustomChmod
-                Q_LOOP0=false
-            elif [ "$Q_0" = "3" ] ; then
-                CustomChown
-                CustomChmod
-                Q_LOOP0=false
-            elif [ "$Q_0" = "4" ] ; then
-                DefaultSettings
-                Q_LOOP0=false
-            fi
-        done
-    else
-        clear
-        echo "Invalid response, try again."
-    fi
+    case $DEFAULT_Q in
+        "Y"|"y"|"Yes"|"yes")
+            DefaultSettings
+            DEFAULT_Q_LOOP=false
+            ;;
+        "N"|"n"|"No"|"no")
+            Q_LOOP0=true
+            while [ "$Q_LOOP0" = true ] ; do
+                echo "What do you want to change?"
+                printf "\t[1] chown (change file owner and group)\n"
+                printf "\t[2] chmod (change file mode bits)\n"
+                printf "\t[3] Both\n"
+                printf "\t[4] Use defaults instead\n"
+                printf " < "
+                read Q_0
+                case $Q_0 in
+                    "1")
+                        CustomChown
+                        ;;
+                    "2")
+                        CustomChmod
+                        Q_LOOP0=false
+                        ;;
+                    "3")
+                        CustomChown
+                        CustomChmod
+                        Q_LOOP0=false
+                        ;;
+                    "4")
+                        DefaultSettings
+                        Q_LOOP0=false
+                        ;;
+                esac
+            done
+            ;;
+        *)
+            clear
+            echo "Invalid response, try again."
+            ;;
+    esac
 done
-# Notifies user to changes permissions
+
+# Notifies user to changed permissions
 printf "\n\e[1mPermissions changed for $SCRIPTNAME!\e[0m\n"
 # Describes changes
 echo "$SCRIPTNAME's owner is now '$OWNERNAME' in group '$GROUPNAME'."
@@ -120,7 +137,7 @@ printf "This first-setup script will now delf-destruct.\n\tIf you need different
 rm -f $0
 exit 0
 
-# uf-first-setup.sh  Copyright (C) 2023  Mikhail Patricio Ortiz-Lunyov
+# uf-first-setup.sh  Copyright (C) 2024  Mikhail P. Ortiz-Lunyov
 #   This program comes with ABSOLUTELY NO WARRANTY.
 #   This is free software, and you are welcome to redistribute it
 #   under certain conditions.
