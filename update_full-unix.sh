@@ -1,6 +1,6 @@
 # Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 1.5.7 (February 12th, 2024)
+# Version 1.5.8 (May 21st, 2024)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH.
@@ -8,7 +8,8 @@
 #
 # Not compatible with CSH, TCSH, or Powershell (Development in progress).
 # More information about license in README and bottom.
-# Best practice is to limit writing permissions to this script in order to avoid accidental or malicious tampering.
+# Best practice is to limit writing permissions to this script in
+#  order to avoid accidental or malicious tampering.
 # Checking the hashes from the github can help to check for tampering.
 
 
@@ -40,6 +41,7 @@ DependencyTest () {
             TOOLUSE="MISSING"
         fi
     fi
+
     # Checks for PING
     if [ "$(ping > /dev/null 2>&1)" != "127" ] ; then
         printf "* PING is found, resuming!\n"
@@ -374,13 +376,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"0")
-					SlackpkgUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "0")
+                    SlackpkgUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             eopkg > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -390,13 +392,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					EopkgUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    EopkgUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             xbps-install > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -406,12 +408,12 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					XbpsUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					;;
+                "1")
+                    XbpsUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    ;;
             esac
             apt > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -421,13 +423,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					AptUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    AptUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             if [ "$YUM_UPDATE" = "true" ] ; then
                 yum > /dev/null 2>&1
@@ -438,13 +440,13 @@ CheckPkgAuto () {
                 #    NOPKG=$(($NOPKG + 1 ))
                 #fi
                 case $? in
-					"0")
-						RedHatUpdate YUM
-						CHECK_PKG=false
-						;;
-					"127")
-						NOPKG=$(( $NOPKG + 1 ))
-						;;
+                    "0")
+                        RedHatUpdate YUM
+                        CHECK_PKG=false
+                        ;;
+                    "127")
+                        NOPKG=$(( $NOPKG + 1 ))
+                        ;;
                 esac
             else
                 dnf > /dev/null 2>&1
@@ -456,14 +458,14 @@ CheckPkgAuto () {
                 #    NOPKG=$(($NOPKG + 1 ))
                 #fi
                 case $? in
-					"0")
-						RedHatUpdate DNF
-						DNF_USED_ONCE=true
-						CHECK_PKG=false
-						;;
-					"127")
-						NOPKG=$(($NOPKG + 1 ))
-						;;
+                    "0")
+                        RedHatUpdate DNF
+                        DNF_USED_ONCE=true
+                        CHECK_PKG=false
+                        ;;
+                    "127")
+                        NOPKG=$(($NOPKG + 1 ))
+                        ;;
                 esac
             fi
             rpm-ostree > /dev/null 2>&1
@@ -474,13 +476,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					RedHatUpdate RPM-OSTREE
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    RedHatUpdate RPM-OSTREE
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             swupd > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "0" ] ; then
@@ -490,13 +492,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"0")
-					SwupdUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "0")
+                    SwupdUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             apk > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -506,13 +508,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					ApkUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    ApkUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             pacman > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -522,13 +524,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					PacmanUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    PacmanUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             zypper > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "0" ] ; then
@@ -543,20 +545,22 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"0")
-					$ROOTUSE transactional-update --version > /dev/null 2>&1
-					case $? in
-						"0")
-							OpenSuseUpdate TRANSACTIONAL-UPDATE
-							;;
-						"127")
-							OpenSuseUpdate ZYPPER
-							;;
-					esac
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "0")
+                    $ROOTUSE transactional-update --version > /dev/null 2>&1
+                    case $? in
+                        "0")
+                            OpenSuseUpdate TRANSACTIONAL-UPDATE
+                            CHECK_PKG=false
+                            ;;
+                        "127")
+                            OpenSuseUpdate ZYPPER
+                            CHECK_PKG=false
+                            ;;
+                    esac
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             pkg > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -566,13 +570,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					PkgUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    PkgUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             pkg_add > /dev/null 2>&1
             #if [ "$?" != "127" -a "$?" = "1" ] ; then
@@ -582,13 +586,13 @@ CheckPkgAuto () {
             #    NOPKG=$(( $NOPKG + 1 ))
             #fi
             case $? in
-				"1")
-					Pkg_addUpdate
-					CHECK_PKG=false
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    Pkg_addUpdate
+                    CHECK_PKG=false
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
         else
             printf "\t\e[1m* Skipping Official Package managers...\e[0m\n\n"
@@ -597,75 +601,75 @@ CheckPkgAuto () {
         if [ "$DISABLEALT" = false ] ; then
             flatpak > /dev/null 2>&1
             case $? in
-				"1")
-					FlatpakUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    FlatpakUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             snap > /dev/null 2>&1
             case $? in
-				"0")
-					SnapUpdate
-					;;
-				"1")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "0")
+                    SnapUpdate
+                    ;;
+                "1")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             brew > /dev/null 2>&1
             case $? in
-				"1")
-					BrewUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    BrewUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             portsnap > /dev/null 2>&1
             case $? in
-				"0")
-					PortsnapUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "0")
+                    PortsnapUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             gem > /dev/null 2>&1
             case $? in
-				"1")
-					GemUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    GemUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             yarn > /dev/null 2>&1
             case $? in
-				"0")
-				YarnUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "0")
+                YarnUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             pipx > /dev/null 2>&1
             case $? in
-				"1")
-					PipxUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    PipxUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             npm > /dev/null 2>&1
             case $? in
-				"1")
-					NpmUpdate
-					;;
-				"127")
-					NOPKG=$(( $NOPKG + 1 ))
-					;;
+                "1")
+                    NpmUpdate
+                    ;;
+                "127")
+                    NOPKG=$(( $NOPKG + 1 ))
+                    ;;
             esac
             nix > /dev/null 2>&1
             if [ "$?" != "127" -a "$?" = "1" -a "$(cat /etc/os-release | grep "nixos")" = "" ] ; then
@@ -817,53 +821,53 @@ SaveStatsComments () {
     #    $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
     #fi
     case $NOCOMMENT in
-		"true")
-			$ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
-			;;
-		*)
-			printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
-			COMMENTINPUT=""
-			# Loops until user types in 'esc'
-			until [ "$COMMENTINPUT" = "~esc~" ] ; do
-				( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
-				printf "* \e[0mTYPE:\e[1m "
-				read COMMENTINPUT
-			done
-			printf "= = =\n\e[0m"
-			#if [ "tempfileISSUEFLAG" = true ] ; then
-			#	LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
-			#	( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-			#else
-			#	LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
-			#	( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-			#	if [ "$LOGCOMMENTS" = "" ] ; then
-			#		LOGCOMMENTS="* No comments by user*"
-			#		( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-			#	fi
-			#fi
-			case $tempfileISSUEFLAG in
-				"true")
-					LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
-					( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-					;;
-				*)
-					LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
-					( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-					if [ "$LOGCOMMENTS" = "" ] ; then
-						LOGCOMMENTS="* No comments by user*"
-						( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-					fi
-					#case $LOGCOMMENTS in
-					#	"")
-					#		LOGCOMMENTS="* No comments by user*"
-					#		( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
-					#		;;
-					#esac
-					;;
-			esac
-			$ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
-			$ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
-			;;
+        "true")
+            $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            ;;
+        *)
+            printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
+            COMMENTINPUT=""
+            # Loops until user types in 'esc'
+            until [ "$COMMENTINPUT" = "~esc~" ] ; do
+                ( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
+                printf "* \e[0mTYPE:\e[1m "
+                read COMMENTINPUT
+            done
+            printf "= = =\n\e[0m"
+            #if [ "tempfileISSUEFLAG" = true ] ; then
+            #    LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
+            #    ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+            #else
+            #    LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
+            #    ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+            #    if [ "$LOGCOMMENTS" = "" ] ; then
+            #        LOGCOMMENTS="* No comments by user*"
+            #        ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+            #    fi
+            #fi
+            case $tempfileISSUEFLAG in
+                "true")
+                    LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
+                    ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+                    ;;
+                *)
+                    LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
+                    ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+                    if [ "$LOGCOMMENTS" = "" ] ; then
+                        LOGCOMMENTS="* No comments by user*"
+                        ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+                    fi
+                    #case $LOGCOMMENTS in
+                    #    "")
+                    #        LOGCOMMENTS="* No comments by user*"
+                    #        ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+                    #        ;;
+                    #esac
+                    ;;
+            esac
+            $ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
+            $ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
+            ;;
     esac
 }
 
@@ -1500,67 +1504,67 @@ SAVESTATSNOPING=false
 SAVESTATTOOMANYARGS=false
 # Checks for root privileges
 case $(whoami) in
-	"root")
-		printf "\t* Script is run as root\n"
-		ROOTUSE=""
-		;;
-	*)
-		# Prints status message
-		printf "\e[3m* Script not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
-		# Test SUDO presence
-		sudo > /dev/null 2>&1
-		case $? in
-			127)
-				printf "* sudo not found..."
-				NOROOT=$(( $NOROOT + 1 ))
-				NOSUDO=true
-				;;
-			*)
-				case $(sudo -l | grep "ALL") in
-					"")
-						printf "* no doas privileges detected...\n"
-						NOROOT=$(( $NOROOT + 1 ))
-						;;
-					*)
-						printf "\t\e[3m* User $(whoami) has sudo permissions, continuing...\e[0m\n"
-						ROOTUSE="sudo"
-						;;
-				esac
-				;;
-		esac
-		# Test DOAS presence
-		doas > /dev/null 2>&1
-		case $? in
-			127)
-				printf "* doas not found...\n"
-				NOROOT=$(( $NOROOT + 1 ))
-				NODOAS=true
-				;;
-			*)
-				case $(groups $(whoami) | grep "wheel") in
-					"")
-						printf "* no doas privileges detected...\n"
-						NOROOT=$(( $NOROOT + 1 ))
-						;;
-					*)
-						printf "\t\e[3m* User $(whoami) has doas permissions, continuing...\e[0m\n"
-						ROOTUSE="doas"
-						;;
-				esac
-				;;
-		esac
-		# If neither SUDO or DOAS is not present
-		if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
-			printf "\t\e[3;5m!!Neither sudo nor doas detected!\e[0m\n"
-			printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
-			exit 1
-		# If user has no permissions in neither SUDO nor DOAS
-		elif [ "$NOROOT" = "2" ] ; then
-			printf "\t\e[3;5m!!User $(whoami) has no root privileges!\e[0m\n"
-			printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
-			exit 1
-		fi
-		;;
+    "root")
+        printf "\t* Script is run as root\n"
+        ROOTUSE=""
+        ;;
+    *)
+        # Prints status message
+        printf "\e[3m* Script not executed as root, checking if user $(whoami) has sudo/doas permission...\e[0m\n"
+        # Test SUDO presence
+        sudo > /dev/null 2>&1
+        case $? in
+            127)
+                printf "* sudo not found..."
+                NOROOT=$(( $NOROOT + 1 ))
+                NOSUDO=true
+                ;;
+            *)
+                case $(sudo -l | grep "ALL") in
+                    "")
+                        printf "* no doas privileges detected...\n"
+                        NOROOT=$(( $NOROOT + 1 ))
+                        ;;
+                    *)
+                        printf "\t\e[3m* User $(whoami) has sudo permissions, continuing...\e[0m\n"
+                        ROOTUSE="sudo"
+                        ;;
+                esac
+                ;;
+        esac
+        # Test DOAS presence
+        doas > /dev/null 2>&1
+        case $? in
+            127)
+                printf "* doas not found...\n"
+                NOROOT=$(( $NOROOT + 1 ))
+                NODOAS=true
+                ;;
+            *)
+                case $(groups $(whoami) | grep "wheel") in
+                    "")
+                        printf "* no doas privileges detected...\n"
+                        NOROOT=$(( $NOROOT + 1 ))
+                        ;;
+                    *)
+                        printf "\t\e[3m* User $(whoami) has doas permissions, continuing...\e[0m\n"
+                        ROOTUSE="doas"
+                        ;;
+                esac
+                ;;
+        esac
+        # If neither SUDO or DOAS is not present
+        if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
+            printf "\t\e[3;5m!!Neither sudo nor doas detected!\e[0m\n"
+            printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+            exit 1
+        # If user has no permissions in neither SUDO nor DOAS
+        elif [ "$NOROOT" = "2" ] ; then
+            printf "\t\e[3;5m!!User $(whoami) has no root privileges!\e[0m\n"
+            printf "!!Root missing, check user permissions\n\n\tUpdate_Full is intended for SysAdmins to fully (or partially)\n\tupdate different systems.\n"
+            exit 1
+        fi
+        ;;
 esac
 # Checks that at least one of the two dependencies, CURL and WGET, are met
 DependencyTest
@@ -1579,19 +1583,19 @@ ActionPrep
 
 ChecksumCheck $TOOLUSE
 case $? in
-	"1")
-		printf "!!Checksum-Checker FAILED!\n"
-		case $RISKYOPERATION in
-			"true")
-				printf "!!!Running despite Checksum-Checker FAILING!!!\n"
-				WarrantyMessage
-				;;
-			*)
-				printf "* Investigate what is going on!\n"
-				exit 1
-				;;
-		esac
-		;;
+    "1")
+        printf "!!Checksum-Checker FAILED!\n"
+        case $RISKYOPERATION in
+            "true")
+                printf "!!!Running despite Checksum-Checker FAILING!!!\n"
+                WarrantyMessage
+                ;;
+            *)
+                printf "* Investigate what is going on!\n"
+                exit 1
+                ;;
+        esac
+        ;;
 esac
 
 # Description
