@@ -1,3 +1,10 @@
+Release 1.5.8 (May 21st, 2024)
+ = = =
+  - Fixed bug that caused infinite loops when attempting to update OpenSUSE systems
+  - Minor re-write to replace tab characters with spaces
+  - Minor re-write in setup script
+  - Typo fixing
+
 Release 1.5.6 (August 30th, 2023)
  = = =
  - Added support for OpenSUSE MicroOS
