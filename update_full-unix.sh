@@ -1478,8 +1478,8 @@ clear
 # Starts counting time
 TIMEBEGIN=$(date +%s)
 # Save Version Number
-FULL_VERSION_NUM="1.5.7 (February 12th 2023)"
-SHORT_VERSION_NUM="1.5.7"
+FULL_VERSION_NUM="1.5.8 (May 21 2024)"
+SHORT_VERSION_NUM="1.5.8"
 # Sets up initial variables
 RISKYOPERATION=false
 ALLARGS=$@
