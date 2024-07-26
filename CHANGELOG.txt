@@ -1,3 +1,10 @@
+Release 2.0.0 (July 25th, 2024)
+ = = =
+ - Near-complete rewrite of entire script
+ - Changed how descriptive arguments are displayed and ran
+ - Renamed --disable-alt-managers/--dam flag to --official-only/-oo
+ - Temporarily dropped support for zSh (zShell)
+
 Release 1.5.8 (May 21st, 2024)
  = = =
   - Fixed bug that caused infinite loops when attempting to update OpenSUSE systems
