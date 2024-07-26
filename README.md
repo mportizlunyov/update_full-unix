@@ -1,4 +1,4 @@
-## Welcome to Update_Full-UNIX (1.5.8)!
+## Welcome to Update_Full-UNIX (2.0.0)!
 
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of Operating Systems through their respective package managers.
 
@@ -22,10 +22,10 @@ This script uses three types of arguments:
 	- ^_Modifier available_
  - `--yum-update` / `-yu` Use YUM instead of DNF on Red-Hat
 	- *<ins>Not compatible</ins> with `-ao`
- - `--disable-alt-managers` / `-dam` Skip alternative package managers
+ - `--official-only` / `-oo` Skip alternative package managers
 	- *<ins>Not compatible</ins> with `-ao`
  - `--alt-only` / `-ao` Skip native package managers
-	- *<ins>Not compatible</ins> with `-ao`
+	- *<ins>Not compatible</ins> with `-oo`
  - `--custom-log-path` / `-clp` Define a custom PATH for the log-file
 	- *<ins>Must be run</ins> with `-ss`
 	- ^_Modifier available_
@@ -52,7 +52,6 @@ This script is **_compatible_ and _tested_** with:
 > - KSH  (Korne SHell)
 > - ASH  (Almquist SHell)
 > - DASH (Debian Almquist Shell)
-> - ZSH  (Z SHell)
 
 The following are **NOT supported**:
 > - CSH  (C SHell)
