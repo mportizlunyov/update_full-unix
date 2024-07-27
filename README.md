@@ -1,4 +1,4 @@
-## Welcome to Update_Full-UNIX (2.0.0)!
+## Welcome to Update_Full-UNIX (2.0.2)!
 
 Update_Full is a suite of Free & Open-Source scripts written in several shell scripts that allows for simple, customisable, and full updating of a wide variety of Operating Systems through their respective package managers.
 
@@ -39,7 +39,7 @@ This script uses three types of arguments:
  - `:no-comment` / `:nc`	 Skip commenting for -ss
  - `:<LOG FILE PATH>`	 Preload custom PATH for log-file for -clp
 
-#### **Descriptive arguments:**
+#### **Informational arguments:**
  - `--help` / `-h` 		 Print Help statement
  - `--conditions` / `-c`	 Print Conditions of redistribution
  - `--warrenty` / `-w` 	 Print Warranty
