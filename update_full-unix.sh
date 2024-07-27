@@ -1,6 +1,6 @@
 # Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 2.0.0 (July 25th, 2024)
+# Version 2.0.1 (July 27th, 2024)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH[Not Working].
@@ -14,8 +14,8 @@
 
 # Critical variables
 ## Version variables
-VERSION_NUMB="2.0.0"
-VERSION_NAME="July 25th, 2024"
+VERSION_NUMB="2.0.1"
+VERSION_NAME="July 27th, 2024"
 VERSION_NAME_FULL="v$VERSION_NUMB ($VERSION_NAME)"
 ## Dependencies
 DEPENDENCY_LIST="ping curl wget"
@@ -25,12 +25,12 @@ CHECKSUM_CHECKER_PATH="00_CHECKSUM_CHECKER.sh"
 ### Official
 OFFICIAL_PKG_MAN="apt yum"
 OFFICIAL_PLG_MAN="$OFFICIAL_PKG_MAN transactional-update"
-OFFICIAL_PKG_MAN="$OFFICIAL_PLG_MAN dnf rpm-ostree"
-OFFICIAL_PKG_MAN="$OFFICIAL_PLG_MAN pacman apk"
-OFFICIAL_PKG_MAN="$OFFICIAL_PLG_MAN zypper pacman"
-OFFICIAL_PKG_MAN="$OFFICIAL_PLG_MAN xbps swupd"
-OFFICIAL_PKG_MAN="$OFFICIAL_PLG_MAN slackpkg eopkg"
-OFFICIAL_PKG_MAN="$OFFICIAL_PLG_MAN pkg pkg_add"
+OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN dnf rpm-ostree"
+OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN pacman apk"
+OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN zypper pacman"
+OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN xbps swupd"
+OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN slackpkg eopkg"
+OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN pkg pkg_add"
 ### Alternative
 ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN flatpak snapd"
 ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN brew portsnap"
@@ -40,6 +40,8 @@ ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN pipx npm"
 AMBIGUOUS_PKG_MAN="$AMBIGUOUS_PKG_MAN nix guix"
 ### Split string
 IFS=" "
+### Informational flag exit
+INFORMATIONAL_EXIT=false
 
 
 # Prints Exit Statement
@@ -125,13 +127,13 @@ AllErrorsMethod () {
 ExistanceCheck () {
   # Execute program, hiding output
   $1 $2 > /dev/null 2>&1
-  echo "$?"
+  return $?
 }
 
 # Checks for CURL/WGET dependency
 DependencyTest () {
   for i in $DEPENDENCY_LIST ; do
-    case "$(ExistanceCheck "$i" "--help")" in
+    case "$(ExistanceCheck "$i" "--help" ; echo "$?")" in
       "127")
         echo "$i missing"
         case "$i" in
@@ -190,7 +192,7 @@ ChecksumCheck () {
       }
       ;;
     *)
-      printf "\t!!! INTERNAL PROGRAM ERROR !!!"
+      printf "\t!!! INTERNAL PROGRAM ERROR !!!\n"
       echo "Tool is [ $1 ]"
       exit 1
       ;;
@@ -455,13 +457,15 @@ GuixUpdate() {
 CheckOfficialPkgMan () {
   # Iterate through OFFICIAL_PKG_MAN array
   for i in $OFFICIAL_PKG_MAN ; do
-    case "$(ExistanceCheck "$i" "--help")" in
+    ExistanceCheck "$i" "--help"
+    case "$?" in
       "127") ;; # Skip package manager
       *)
         case "$i" in
           "apt") AptUpdate ; return ;;
           "yum")
             case "$YUM_UPDATE" in
+              "false") echo "GOT IT!" ; continue ;;
               "true") RedHatUpdate "YUM" ; return ;;
             esac
             ;;
@@ -479,12 +483,12 @@ CheckOfficialPkgMan () {
           "pkg") PkgUpdate ; return ;;
           "pkg_add") Pkg_addUpdate ; return ;;
         esac
-        # Exit with error if no Official Package manager is found
-        AllErrorsMethod "5"
-        exit $?
         ;;
     esac
   done
+  # Alternative Exit
+  AllErrorsMethod "5"
+  exit $?
 }
 
 # Check alternative package managers
@@ -492,7 +496,8 @@ CheckAlternativePkgMan () {
   # Initialise local method variable
   local PKG_RAN=false
   for i in $ALTERNATIVE_PKG_MAN ; do
-    case "$(ExistanceCheck "$i" "--help")" in
+    ExistanceCheck "$i" "--help"
+    case "$?" in
       "127") ;; # Skip package manager
       *)
         case "$i" in
@@ -557,6 +562,7 @@ CheckAlternativePkgMan () {
   printf "\nThis can easily be done by launching the \e[1muf-first-setup.sh\e[0m script that comes in the repository."
   printf "\nIf you do not end up using it DELETE IT. Otherwise, it will delete itself after first usage."
   printf "\n\nAdditionally, verify the script using the checksums found at https://github.com/mportizlunyov/uf-CHECKSUM_STORAGE\n\n"
+  INFORMATIONAL_EXIT=true
  }
 
 # Prints the conditions under which the GPLv3 license allows the program to be redistributed
@@ -568,6 +574,7 @@ ConditionMessage () {
   echo 'you may not convey it at all. For example, if you agree to terms that obligate you to collect a royalty for further'
   echo 'conveying from those to whom you convey the Program, the only way you could satisfy both those terms and this'
   echo 'License would be to refrain entirely from conveying the Program.'
+  INFORMATIONAL_EXIT=true
 }
 
 # Prints the warranty under which GPLv3 covers the script
@@ -580,6 +587,7 @@ WarrantyMessage () {
   echo 'FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE'
   echo 'OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE'
   echo 'COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.'
+  INFORMATIONAL_EXIT=true
 }
 
 # Prints the privacy policy
@@ -596,6 +604,7 @@ PrivacyPolicyMessage () {
   echo 'CONTROLS THEY PROVIDE TO THEIR USERS.'
   echo 'ALL OF THESE STATEMENTS CAN BE VERIFIED, AS THIS SOFTWARE IS FREE & OPEN-SOURCE,'
   echo 'THUS MEANING THAT ANYBODY CAN READ THE SOURCE CODE AND VERIFY WHAT IT DOES.'
+  INFORMATIONAL_EXIT=true
 }
 
 # This function sets up the commenting function in the SaveStats function
@@ -1132,27 +1141,25 @@ ActionPrep () {
 
 
 # Pre-Main section, used to use informational arguments
-case "$@" in
-  *"--conditions"*|*"-c"*|*"--help"*|*"-h"*|*"--privacy-policy"*|*"-pp"*|*"--version"*|*"-v"*|*"--warranty"*|*"-w"*)
-    for INFORMATIONAL_ARGS in "$@" ; do
-      case "${INFORMATIONAL_ARGS}" in
-        "-c"|"--conditions") ConditionMessage ;;
-        "-pp"|"--privacy-policy") PrivacyPolicyMessage ;;
-        "-v"|"--version")
-          echo " = = ="
-          echo "$0 $VERSION_NAME_FULL"
-          ;;
-        "-h"|"--help") HelpMessage ;;
-        "-w "|"--warranty") WarrantyMessage ;;
-      esac
-    done
-    exit 0
-    ;;
+for INFORMATIONAL_ARGS in "$@" ; do
+  case "$INFORMATIONAL_ARGS" in
+    "-c"|"--conditions") ConditionMessage ;;
+    "-pp"|"--privacy-policy") PrivacyPolicyMessage ;;
+    "-v"|"--version")
+      echo " = = ="
+      echo "$0 $VERSION_NAME_FULL"
+      ;;
+    "-h"|"--help") HelpMessage ;;
+    "-w "|"--warranty") WarrantyMessage ;;
+  esac
+done
+case "$INFORMATIONAL_EXIT" in
+  "true") exit 0 ;;
 esac
 
 # Main
 clear
-## Starts counting time
+## Starts counting time (in seconds)
 TIMEBEGIN=$(date +%s)
 ## Sets up initial variables
 ### Root-related variables
