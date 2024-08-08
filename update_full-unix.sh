@@ -1,6 +1,6 @@
 # Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 2.0.1 (July 27th, 2024)
+# Version 2.0.2 (August 8th, 2024)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH[Not Working].
@@ -14,8 +14,8 @@
 
 # Critical variables
 ## Version variables
-VERSION_NUMB="2.0.1"
-VERSION_NAME="July 27th, 2024"
+VERSION_NUMB="2.0.2"
+VERSION_NAME="August 8th 2024"
 VERSION_NAME_FULL="v$VERSION_NUMB ($VERSION_NAME)"
 ## Dependencies
 DEPENDENCY_LIST="ping curl wget"
@@ -1148,6 +1148,7 @@ for INFORMATIONAL_ARGS in "$@" ; do
     "-v"|"--version")
       echo " = = ="
       echo "$0 $VERSION_NAME_FULL"
+      INFORMATIONAL_EXIT=true
       ;;
     "-h"|"--help") HelpMessage ;;
     "-w "|"--warranty") WarrantyMessage ;;
