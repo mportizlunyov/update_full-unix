@@ -1,3 +1,7 @@
+Release 2.0.2 (August 8th 2024)
+ = = =
+ - Patched a bug that made -v/--version flag not be able to run on its own
+
 Release 2.0.1 (July 27th 2024)
  = = =
  - Patched mis-written variables, causing not all official package managers to be run
