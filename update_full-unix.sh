@@ -1,12 +1,12 @@
 # Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 2.0.2 (August 8th, 2024)
+# Version 2.1.2 (August 19th, 2024)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
-# Compatible and tested with BASH, SH, KSH, ASH, DASH and ZSH[Not Working].
+# Compatible and tested with BASH, SH, KSH, ASH, and DASH.
 #
 #
-# Not compatible with CSH, TCSH, or Powershell.
+# Not compatible with ZSH, CSH, TCSH, or PowerShell.
 # More information about license in README and bottom.
 # Best practice is to limit writing permissions to this script in
 #  order to avoid accidental or malicious tampering.
@@ -14,9 +14,13 @@
 
 # Critical variables
 ## Version variables
-VERSION_NUMB="2.0.2"
-VERSION_NAME="August 8th 2024"
+VERSION_NUMB="2.1.2"
+VERSION_NAME="August 19th 2024"
 VERSION_NAME_FULL="v$VERSION_NUMB ($VERSION_NAME)"
+echo "$VERSION_NAME_FULL" > $(pwd)/tempfile_VERSION
+## Installation folder variable
+INSTALLATION_FOLDER_UNIX="$(dirname $(readlink -f $0))"
+RELATED_DIRECTORY=$INSTALLATION_FOLDER_UNIX
 ## Dependencies
 DEPENDENCY_LIST="ping curl wget"
 CHECKSUM_CHECKER_PATH="00_CHECKSUM_CHECKER.sh"
@@ -32,7 +36,7 @@ OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN xbps swupd"
 OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN slackpkg eopkg"
 OFFICIAL_PKG_MAN="$OFFICIAL_PKG_MAN pkg pkg_add"
 ### Alternative
-ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN flatpak snapd"
+ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN flatpak snap"
 ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN brew portsnap"
 ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN rubygem yarn"
 ALTERNATIVE_PKG_MAN="$ALTERNATIVE_PKG_MAN pipx npm"
@@ -197,7 +201,7 @@ ChecksumCheck () {
       exit 1
       ;;
   esac
-  $ROOTUSE $SHELL ./$CHECKSUM_CHECKER_PATH $VERSION_NUMB $TOOLUSE $CURL_INSECURE
+  $ROOTUSE $SHELL ./$CHECKSUM_CHECKER_PATH $VERSION_NUMB $TOOLUSE $CURL_INSECURE $RELATED_DIRECTORY
   if [ "$?" = "1" ] ; then
     echo "Checksum-Checker FAILED! Investigate!!"
     case "$RISKYOPERATION" in
@@ -308,7 +312,7 @@ FlatpakUpdate () {
 SnapUpdate () {
   SNAPFLAG=true
   printf "\n\t* \e[1mSNAP detected under $DISTRO_NAME!\e[0m\n"
-  snap refresh
+  $ROOTUSE snap refresh
 }
 
 # For Clear Linux
@@ -502,7 +506,7 @@ CheckAlternativePkgMan () {
       *)
         case "$i" in
           "flatpak") FlatpakUpdate ; PKG_RAN=true ;;
-          "snapd") SnapUpdate ; PKG_RAN=true ;;
+          "snap") SnapUpdate ; PKG_RAN=true ;;
           "brew") BrewUpdate ; PKG_RAN=true ;;
           "portsnap") PortsnapUpdate ; PKG_RAN=true ;;
           "rubygem") GemUpdate ; PKG_RAN=true ;;
@@ -610,13 +614,13 @@ PrivacyPolicyMessage () {
 # This function sets up the commenting function in the SaveStats function
 SaveStatsComments () {
   case $NOCOMMENT in
-    "true") $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat ./tempfile_LOGFILEPATH)' ;;
+    "true") $ROOTUSE $SHELL -c '( echo "!= = NO COMMENTS = =!" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)' ;;
     *)
       printf "\n\n\e[1m* Type in the letters \"~esc~\" to exit the comments bar\n= = =\n"
       COMMENTINPUT=""
       # Loops until user types in 'esc'
       until [ "$COMMENTINPUT" = "~esc~" ] ; do
-        ( echo "$COMMENTINPUT" ) >> ./tempfile_COMMENTS
+        ( echo "$COMMENTINPUT" ) >> $(pwd)/tempfile_COMMENTS
         printf "* \e[0mTYPE:\e[1m "
         read COMMENTINPUT
       done
@@ -624,19 +628,19 @@ SaveStatsComments () {
       case $tempfileISSUEFLAG in
         "true")
           LOGCOMMENTS="!!tempfile PREMATURELY DELETED, USER COMMENTS NOT SAVED!!"
-          ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+          ( echo "$LOGCOMMENTS" ) > $(pwd)/tempfile_COMMENTS
           ;;
         *)
-          LOGCOMMENTS="$(sed '1d' ./tempfile_COMMENTS)"
-          ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+          LOGCOMMENTS="$(sed '1d' $(pwd)/tempfile_COMMENTS)"
+          ( echo "$LOGCOMMENTS" ) > $(pwd)/tempfile_COMMENTS
           if [ "$LOGCOMMENTS" = "" ] ; then
             LOGCOMMENTS="* No comments by user*"
-            ( echo "$LOGCOMMENTS" ) > ./tempfile_COMMENTS
+            ( echo "$LOGCOMMENTS" ) > $(pwd)/tempfile_COMMENTS
           fi
           ;;
       esac
-      $ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat ./tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat ./tempfile_LOGFILEPATH)'
-      $ROOTUSE rm ./tempfile_COMMENTS > /dev/null 2>&1
+      $ROOTUSE $SHELL -c '( echo "User-Generated Comments: = =" && echo "$(cat $(pwd)/tempfile_COMMENTS)" && echo "= = = = = = = = = =" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
+      $ROOTUSE rm $(pwd)/tempfile_COMMENTS > /dev/null 2>&1
       ;;
   esac
 }
@@ -645,137 +649,137 @@ SaveStatsComments () {
 SaveStatsPkgLog () {
   # Begins to prepare adding the used package managers in log
   OFFICIALPKGMAN="No official package managers used"
-  ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+  ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   ALTPKGMAN="No alternative package managers used"
-  ( echo "$ALTPKGMAN" ) > ./tempfile_ALTPKG
+  ( echo "$ALTPKGMAN" ) > $(pwd)/tempfile_ALTPKG
   STATUSFLATPAK="NOT USED"
-  ( echo "$STATUSFLATPAK" ) > ./tempfile_FLATPAK
+  ( echo "$STATUSFLATPAK" ) > $(pwd)/tempfile_FLATPAK
   STATUSSNAP="NOT USED"
-  ( echo "$STATUSSNAP" ) > ./tempfile_SNAP
+  ( echo "$STATUSSNAP" ) > $(pwd)/tempfile_SNAP
   STATUSPORTSNAP="NOT USED"
-  ( echo "$STATUSPORTSNAP" ) > ./tempfile_PORTSNAP
+  ( echo "$STATUSPORTSNAP" ) > $(pwd)/tempfile_PORTSNAP
   STATUSBREW="NOT USED"
-  ( echo "$STATUSBREW" ) > ./tempfile_BREW
+  ( echo "$STATUSBREW" ) > $(pwd)/tempfile_BREW
   STATUSGEM="NOT USED"
-  ( echo "$STATUSGEM" ) > ./tempfile_GEM
+  ( echo "$STATUSGEM" ) > $(pwd)/tempfile_GEM
   STATUSYARN="NOT USED"
-  ( echo "$STATUSYARN" ) > ./tempfile_YARN
+  ( echo "$STATUSYARN" ) > $(pwd)/tempfile_YARN
   STATUSNPM="NOT USED"
-  ( echo "$STATUSNPM" ) > ./tempfile_NPM
+  ( echo "$STATUSNPM" ) > $(pwd)/tempfile_NPM
   STATUSPIPx="NOT USED"
-  ( echo "$STATUSPIPx" ) > ./tempfile_PIPx
+  ( echo "$STATUSPIPx" ) > $(pwd)/tempfile_PIPx
   # For official Package Managers
   if [ "$APTFLAG" = true ] ; then
     OFFICIALPKGMAN="APT package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$PACMANFLAG" = true ] ; then
     OFFICIALPKGMAN="PACMAN package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$DNFFLAG" = true ] ; then
     OFFICIALPKGMAN="DNF package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$YUMFLAG" = true ] ; then
     OFFICIALPKGMAN="YUM package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$SWUPDFLAG" = true ] ; then
     OFFICIALPKGMAN="SWUPD package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$APKFLAG" = true ] ; then
     OFFICIALPKGMAN="APK package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$GUIXFLAG" = true ] ; then
     OFFICIALPKGMAN="GUIX package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$ZYPPERFLAG" = true ] ; then
     OFFICIALPKGMAN="ZYPPER package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$NIXFLAG" = true ] ; then
     OFFICIALPKGMAN="NIX package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$PKGFLAG" = true ] ; then
     OFFICIALPKGMAN="PKG package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$PKG_ADDFLAG" = true ] ; then
     OFFICIALPKGMAN="PKG_ADD package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$XBPSFLAG" = true ] ; then
     OFFICIALPKGMAN="XBPS package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$SLACKFLAG" = true ] ; then
     OFFICIALPKGMAN="Slackware package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$EOPKGFLAG" = true ] ; then
     OFFICIALPKGMAN="Eopkg package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$OSTREEFLAG" = true ] ; then
     OFFICIALPKGMAN="RPM-Ostree package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   elif [ "$TRANUPDATEFLAG" = true ] ; then
     OFFICIALPKGMAN="Transactional-Update package manager used."
-    ( echo "$OFFICIALPKGMAN" ) > ./tempfile_OFFICIALPKG
+    ( echo "$OFFICIALPKGMAN" ) > $(pwd)/tempfile_OFFICIALPKG
   fi
   # Changes variable ALTPKGMAN as nessesary
   if [ "$FLATPAKFLAG" = true -o "$SNAPFLAG" = true -o "$PORTSNAPFLAG" = true -o "$BREWFLAG" = true -o "$GEMFLAG" = true -o "$YARNFLAG" = true -o "$NPMFLAG" = true -o "$PIPxFLAG" = true ] ; then
     ALTPKGMAN="Alternative package managers used"
-    ( echo "$ALTPKGMAN" ) > ./tempfile_ALTPKG
+    ( echo "$ALTPKGMAN" ) > $(pwd)/tempfile_ALTPKG
   fi
   # For alternative package managers
   if [ "$FLATPAKFLAG" = true ] ; then
     STATUSFLATPAK="USED"
-    ( echo "$STATUSFLATPAK" ) > ./tempfile_FLATPAK
+    ( echo "$STATUSFLATPAK" ) > $(pwd)/tempfile_FLATPAK
     FLATPAKFLAG=false
   fi
   if [ "$SNAPFLAG" = true ] ; then
     STATUSSNAP="USED"
-    ( echo "$STATUSSNAP" ) > ./tempfile_SNAP
+    ( echo "$STATUSSNAP" ) > $(pwd)/tempfile_SNAP
     FLATPAKFLAG=false
   fi
   if [ "$PORTSNAPFLAG" = true ] ; then
     STATUSPORTSNAPSNAP="USED"
-    ( echo "$STATUSPORTSNAP" ) > ./tempfile_PORTSNAP
+    ( echo "$STATUSPORTSNAP" ) > $(pwd)/tempfile_PORTSNAP
     PORTSNAPFLAG=false
   fi
   if [ "$BREWFLAG" = true ] ; then
     STATUSBREW="USED"
-    ( echo "$STATUSBREW" ) > ./tempfile_BREW
+    ( echo "$STATUSBREW" ) > $(pwd)/tempfile_BREW
     BREWFLAG=false
   fi
   if [ "$GEMFLAG" = true ] ; then
     STATUSGEM="USED"
-    ( echo "$STATUSGEM" ) > ./tempfile_GEM
+    ( echo "$STATUSGEM" ) > $(pwd)/tempfile_GEM
     GEMFLAG=false
   fi
   if [ "$YARNFLAG" = true ] ; then
     STATUSYARN="USED"
-    ( echo "$STATUSYARN" ) > ./tempfile_YARN
+    ( echo "$STATUSYARN" ) > $(pwd)/tempfile_YARN
     YARNFLAG=false
   fi
   if [ "$NPMFLAG" = true ] ; then
     STATUSNPM="USED"
-    ( echo "$STATUSNPM" ) > ./tempfile_NPM
+    ( echo "$STATUSNPM" ) > $(pwd)/tempfile_NPM
     NPMFLAG=false
   fi
   if [ "$PIPxFLAG" = true ] ; then
     STATUSPIPx="USED"
-    ( echo "$STATUSPIPx" ) > ./tempfile_PIPx
+    ( echo "$STATUSPIPx" ) > $(pwd)/tempfile_PIPx
     PIPxFLAG=false
   fi
   # Changes logfile depending on if 
   if [ "$OFFICIALPKGMAN" = "No official package managers used" -a "$ALTPKGMAN" = "No alternative package managers used" ] ; then
-    $ROOTUSE $SHELL -c '( echo "No package managers at all detected!" ) >> $(cat ./tempfile_LOGFILEPATH)'
+    $ROOTUSE $SHELL -c '( echo "No package managers at all detected!" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
   else
-    $ROOTUSE $SHELL -c '( echo "$(cat ./tempfile_OFFICIALPKG)" && printf "$(cat ./tempfile_ALTPKG)\n FLATPAK:  $(cat ./tempfile_FLATPAK)\n SNAP:   $(cat ./tempfile_SNAP)\n PORTSNAP: $(cat ./tempfile_PORTSNAP)\n BREW:   $(cat ./tempfile_BREW)\n GEM:    $(cat ./tempfile_GEM)\n NPM:    $(cat ./tempfile_NPM)\n PIPx:   $(cat ./tempfile_PIPx)\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+    $ROOTUSE $SHELL -c '( echo "$(cat $(pwd)/tempfile_OFFICIALPKG)" && printf "$(cat $(pwd)/tempfile_ALTPKG)\n FLATPAK:  $(cat $(pwd)/tempfile_FLATPAK)\n SNAP:   $(cat $(pwd)/tempfile_SNAP)\n PORTSNAP: $(cat $(pwd)/tempfile_PORTSNAP)\n BREW:   $(cat $(pwd)/tempfile_BREW)\n GEM:    $(cat $(pwd)/tempfile_GEM)\n NPM:    $(cat $(pwd)/tempfile_NPM)\n PIPx:   $(cat $(pwd)/tempfile_PIPx)\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
     # Removes unneeded tempfiles
-    $ROOTUSE rm ./tempfile_OFFICIALPKG > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_ALTPKG > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_FLATPAK > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_SNAP > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_PORTSNAP > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_BREW > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_GEM > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_YARN > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_NPM > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_PIPx > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_OFFICIALPKG > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_ALTPKG > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_FLATPAK > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_SNAP > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_PORTSNAP > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_BREW > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_GEM > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_YARN > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_NPM > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_PIPx > /dev/null 2>&1
   fi
 }
 
@@ -788,24 +792,25 @@ SaveStats () {
     LOGFILEPATH="$(pwd)"
   fi
   #LOG_FILE="$LOGFILEPATH/uf-unix-log.txt"
-  ( echo "$LOGFILEPATH/uf-unix-log.txt" ) > ./tempfile_LOGFILEPATH
+  ( echo "$LOGFILEPATH/uf-unix-log.txt" ) > $(pwd)/tempfile_LOGFILEPATH
   # Checks if save-stat is enabled
   if [ "$SAVECONFIRM" = true ] ; then
     # Ends counting time
     TIMEEND=$(date +%s)
     TIMETOTAL=$(( $TIMEEND - $TIMEBEGIN ))
-    ( echo "$TIMETOTAL" ) > ./tempfile_TIME
+    ( echo "$TIMETOTAL" ) > $(pwd)/tempfile_TIME
     # If ping scan fails
     if [ "$SAVESTATSNOPING" = "true" ] ; then
       DESCNOPING="Ping test failed, check domain ($PING_TARGET)"
-      ( echo "$DESCNOPING" ) > ./tempfile_DESCNOPING
-      $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat tempfile_DESCNOPING))\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+      ( echo "$DESCNOPING" ) > $(pwd)/tempfile_DESCNOPING
+      $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat $(pwd)/tempfile_TIME) sec.\n\n$(cat tempfile_DESCNOPING))\n\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
       SaveStatsComments
-      $ROOTUSE $SHELL -c '( printf "Version 2.0.0 (July 25th 2024)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+      $ROOTUSE $SHELL -c '( printf "$(cat $(pwd)/tempfile_VERSION)\n--- Exit 1 ---/\n\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
       # Remove leftover tempfiles
-      $ROOTUSE rm ./tempfile_DESCNOPING > /dev/null 2>&1
-      $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
-      $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_DESCNOPING > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_TIME > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_LOGFILEPATH > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_VERSION > /dev/null 2>&1
       # Ending phrase
       printf "* Log Saved...\nAll done!\n"
       ExitStatement
@@ -813,27 +818,29 @@ SaveStats () {
     # If two or more incompatible functional arguments are detected
     elif [ "$SAVESTATINCOMPARGS" = "true" ] ; then
       DESCINCOPARGS="Incompatible arguments detected($INCOMPARGS_DETAIL)"
-      ( echo "$DESCINCOPARGS" ) > ./tempfile_DESCINCOPARGS
-      $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n$(cat ./tempfile_DESCINCOPARGS)\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+      ( echo "$DESCINCOPARGS" ) > $(pwd)/tempfile_DESCINCOPARGS
+      $ROOTUSE $SHELL -c '( echo "--- Failed Operation ---\\" && printf "Generated $(date)\nTime took: $(cat $(pwd)/tempfile_TIME) sec.\n\n$(cat $(pwd)/tempfile_DESCINCOPARGS)\n\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
       SaveStatsComments
-      $ROOTUSE $SHELL -c '( printf "Version 2.0.0 (July 25th 2024)\n--- Exit 1 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+      $ROOTUSE $SHELL -c '( printf "$(cat $(pwd)/tempfile_VERSION)\n--- Exit 1 ---/\n\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
       # Remove leftover tempfiles
-      $ROOTUSE rm ./tempfile_DESCINCOPARGS > /dev/null 2>&1
-      $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
-      $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_DESCINCOPARGS > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_TIME > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_LOGFILEPATH > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_VERSION > /dev/null 2>&1
       # Ending phrase
       printf "* Log Saved...\nAll done!\n"
       ExitStatement
       exit 1
     else
       #SaveStatsPkgLog
-      $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat ./tempfile_TIME) sec.\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+      $ROOTUSE $SHELL -c '( echo "--- Successful Operation ---\\" && printf "Generated $(date)\nTime took: $(cat $(pwd)/tempfile_TIME) sec.\n\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
       SaveStatsPkgLog
       SaveStatsComments
-      $ROOTUSE $SHELL -c '( printf "Version 2.0.0 (July 25th 2024)\n--- Exit 0 ---/\n\n" ) >> $(cat ./tempfile_LOGFILEPATH)'
+      $ROOTUSE $SHELL -c '( printf "$(cat $(pwd)/tempfile_VERSION)\n--- Exit 0 ---/\n\n" ) >> $(cat $(pwd)/tempfile_LOGFILEPATH)'
       # Remove leftover tempfiles
-      $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
-      $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_TIME > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_LOGFILEPATH > /dev/null 2>&1
+      $ROOTUSE rm $(pwd)/tempfile_VERSION > /dev/null 2>&1
       # Ending phrase
       printf "* Log Saved...\nAll done!\n"
       ExitStatement
@@ -841,8 +848,9 @@ SaveStats () {
     fi
   else
     # Remove leftover tempfiles
-    $ROOTUSE rm ./tempfile_TIME > /dev/null 2>&1
-    $ROOTUSE rm ./tempfile_LOGFILEPATH > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_TIME > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_LOGFILEPATH > /dev/null 2>&1
+    $ROOTUSE rm $(pwd)/tempfile_VERSION > /dev/null 2>&1
     echo "* All done!"
     ExitStatement
     exit 0
@@ -1231,7 +1239,7 @@ case $(whoami) in
         ;;
     esac
     # If neither SUDO or DOAS is not present
-    if [ "$NOSUDO" = true ] && [ "$NODOAS" = true ] ; then
+    if [ "$NOSUDO" = "true" ] && [ "$NODOAS" = "true" ] ; then
       AllErrorsMethod "11" "MISSING_TOOL" ; exit $?
     # If user has no permissions in neither SUDO nor DOAS
     elif [ "$NOROOT" = "2" ] ; then
