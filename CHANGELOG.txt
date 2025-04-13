@@ -1,3 +1,9 @@
+Release 2.1.3 (April 12th 2025)
+ = = =
+ - Patched a bug where DNF's autoremove command did not run automatically
+ - Updated how root is detected
+ - Created DiagMessage() method for future diagnostic use, added -dm/--diagnostic script flag
+
 Release 2.0.2 (August 8th 2024)
  = = =
  - Patched a bug that made -v/--version flag not be able to run on its own

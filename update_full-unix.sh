@@ -1,6 +1,6 @@
 # Written by Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #
-# Version 2.1.2 (August 19th, 2024)
+# Version 2.1.3 (April 12th 2025)
 #
 # This script is licensed under the GNU Public License Version 3 (GPLv3).
 # Compatible and tested with BASH, SH, KSH, ASH, and DASH.
@@ -14,8 +14,8 @@
 
 # Critical variables
 ## Version variables
-VERSION_NUMB="2.1.2"
-VERSION_NAME="August 19th 2024"
+VERSION_NUMB="2.1.3"
+VERSION_NAME="April 12th 2025"
 VERSION_NAME_FULL="v$VERSION_NUMB ($VERSION_NAME)"
 echo "$VERSION_NAME_FULL" > $(pwd)/tempfile_VERSION
 ## Installation folder variable
@@ -46,12 +46,22 @@ AMBIGUOUS_PKG_MAN="$AMBIGUOUS_PKG_MAN nix guix"
 IFS=" "
 ### Informational flag exit
 INFORMATIONAL_EXIT=false
+### Diagnostic message
+DIAG_MESSAGE=false
 
 
 # Prints Exit Statement
 ExitStatement () {
   printf "\t* I hope this program was useful for you!\n\n"
   printf "\t\e[3m* Please give this project a star on github!\e[0m\n"
+}
+
+# Prints diagnostic message
+DiagMessage () {
+  case "$DIAG_MESSAGE" in
+    "false") return ;;
+    *) echo "@@$1";;
+  esac
 }
 
 # Deals with errors in an organized fashion
@@ -267,7 +277,7 @@ RedHatUpdate (){
       DNFFLAG=true
       $ROOTUSE dnf check-update $MANQ
       $ROOTUSE dnf update $MANQ
-      $ROOTUSE dnf autoremove $MANQ_DEB1
+      $ROOTUSE dnf autoremove $MANQ
       ;;
     # For RPM-OSTREE (found in Fedora SilverBlue, Kinoite, and CoreOS)
     "RPM-OSTREE")
@@ -903,6 +913,9 @@ ActionFlag () {
         "override-checksum"|"oc")
           RISKYOPERATION=true
           ;;
+        "diagnostic"|"dm")
+          DIAG_MESSAGE=true
+          ;;
         *) AllErrorsMethod "7" "$1" ; exit $? ;;
       esac
       ;;
@@ -1287,7 +1300,7 @@ fi
 ## Checks if commenting was enabled
 SaveStats
 
-# Update_full-unix.sh  Copyright (C) 2024  Mikhail P. Ortiz-Lunyov (mportizlunyov)
+# Update_full-unix.sh  Copyright (C) 2025  Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #   This program comes with ABSOLUTELY NO WARRANTY; for details add argument `-w' or `--warranty'.
 #   This is free software, and you are welcome to redistribute it
 #   under certain conditions; add argument `-c' or `--conditions' for details.
