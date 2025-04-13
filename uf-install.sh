@@ -82,7 +82,7 @@ else
   CreateInstall "fresh"
 fi
 
-# Update_full-unix.sh  Copyright (C) 2024  Mikhail P. Ortiz-Lunyov (mportizlunyov)
+# Update_full-unix.sh  Copyright (C) 2025  Mikhail P. Ortiz-Lunyov (mportizlunyov)
 #   This program comes with ABSOLUTELY NO WARRANTY; for details add argument `-w' or `--warranty'.
 #   This is free software, and you are welcome to redistribute it
 #   under certain conditions; add argument `-c' or `--conditions' for details.

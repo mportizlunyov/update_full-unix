@@ -157,7 +157,7 @@ printf "This first-setup script will now delf-destruct.\n\tIf you need different
 rm -f $0
 exit 0
 
-# uf-first-setup.sh  Copyright (C) 2024  Mikhail P. Ortiz-Lunyov
+# uf-first-setup.sh  Copyright (C) 2025  Mikhail P. Ortiz-Lunyov
 #   This program comes with ABSOLUTELY NO WARRANTY.
 #   This is free software, and you are welcome to redistribute it
 #   under certain conditions.
